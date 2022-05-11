@@ -1,0 +1,94 @@
+@use "sass:map";
+@use "@angular/material" as mat;
+
+@mixin global-theme-mixin($theme) {
+    $config: mat.get-color-config($theme);
+    $primary: map.get($config, "primary");
+    $accent: map.get($config, "accent");
+    $warn: map.get($config, "warn");
+    $foreground: map.get($config, "foreground");
+    $background: map.get($config, "background");
+
+    $bgcolor: map.get($background, "background");
+    $txtcolor: map.get($foreground, "base");
+
+    .bg-base {
+        background-color: map.get($background, "background");
+    }
+
+    .bg-none {
+        background-color: transparent !important;
+    }
+
+    $list: (
+        "primary": $primary,
+        "accent": $accent,
+        "warn": $warn,
+    );
+    @each $key, $value in $list {
+        .bg-#{$key} {
+            background-color: mat.get-color-from-palette($value);
+        }
+
+        .txt-#{$key} {
+            color: mat.get-color-from-palette($value);
+        }
+
+        @for $i from 1 through 9 {
+            .bg-#{$key}-#{$i * 100} {
+                background-color: mat.get-color-from-palette($value, $i * 100);
+            }
+
+            .txt-#{$key}-#{$i * 100} {
+                color: mat.get-color-from-palette($value, $i * 100);
+            }
+        }
+    }
+
+    .overflow {
+        @each $key, $value in $list {
+            &.overflow-#{$key} {
+                &::-webkit-scrollbar-thumb {
+                    background-color: rgba(mat.get-color-from-palette($value), 0.25);
+
+                    &:hover {
+                        background-color: mat.get-color-from-palette($value);
+                    }
+                }
+            }
+        }
+
+        @for $i from 1 through 9 {
+            &.overflow-primary-#{$i * 100} {
+                &::-webkit-scrollbar-thumb {
+                    $bgcolor: mat.get-color-from-palette($primary, $i * 100);
+                    background-color: rgba($bgcolor, 0.25);
+
+                    &:hover {
+                        background-color: $bgcolor;
+                    }
+                }
+            }
+
+            &.overflow-accent-#{$i * 100} {
+                &::-webkit-scrollbar-thumb {
+                    $bgcolor: mat.get-color-from-palette($accent, $i * 100);
+
+                    &:hover {
+                        background-color: $bgcolor;
+                    }
+                }
+            }
+
+            &.overflow-warn-#{$i * 100} {
+                &::-webkit-scrollbar-thumb {
+                    $bgcolor: mat.get-color-from-palette($warn, $i * 100);
+
+                    &:hover {
+                        background-color: $bgcolor;
+                    }
+                }
+            }
+        }
+    }
+}

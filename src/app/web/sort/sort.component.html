@@ -1,0 +1,89 @@
+<mat-card class="mat-elevation-z0 demo-sort-view-wrapper h-100">
+    <form [formGroup]="group">
+        <mat-card-header class="sx-50">
+            <mat-card-title class="mb-125" style="font-size: 24px">Sorting Algorithms</mat-card-title>
+            <mat-card-subtitle class="mb-0">Total: {{calcCount() | number}}</mat-card-subtitle>
+            <span class="flex-fill"></span>
+            <mat-form-field appearance="standard">
+                <mat-label>Sort Name</mat-label>
+                <mat-select formControlName="nameCtrl">
+                    <mat-option disabled value="none">--- Select One ---</mat-option>
+                    <mat-optgroup [label]="group.label" *ngFor="let group of nameGroups">
+                        <mat-option [value]="toggle.code" *ngFor="let toggle of group.toggles">
+                            {{toggle.text}}
+                        </mat-option>
+                    </mat-optgroup>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="standard">
+                <mat-label>Sort Speed</mat-label>
+                <mat-select formControlName="speedCtrl">
+                    <mat-option [disabled]="toggle.code === 'none'" [value]="toggle.code"
+                                *ngFor="let toggle of speedToggles">
+                        <span>{{toggle.text}}</span>
+                        <span *ngIf="toggle.code !== 'none'">({{toggle.code}}ms)</span>
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="standard">
+                <mat-label>Sort Order</mat-label>
+                <mat-select formControlName="orderCtrl">
+                    <mat-option [disabled]="toggle.code === 'none'" [value]="toggle.code"
+                                *ngFor="let toggle of orderToggles">
+                        {{toggle.text}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="standard">
+                <mat-label>Sort Size</mat-label>
+                <input matInput type="text" pattern="[0-9]+" formControlName="sizeCtrl">
+            </mat-form-field>
+        </mat-card-header>
+    </form>
+    <mat-divider inset style="margin: 0 -1rem 1rem;width: calc(100% + 2rem);"></mat-divider>
+    <mat-card-content class="h-100"></mat-card-content>
+    <mat-divider inset style="margin: 0 -1rem 1rem;width: calc(100% + 2rem);"></mat-divider>
+    <mat-card-footer class="d-flex align-items-center sx-50 m-0 p-0">
+        <form [formGroup]="group" class="flex-fill">
+            <mat-slide-toggle color="primary" disableRipple formControlName="flagCtrl">
+                Use Dataset with Random Number
+            </mat-slide-toggle>
+        </form>
+        <button mat-raised-button color="primary" [disabled]="!group.valid" class="py-25" style="width: 6rem"
+                (click)="handleToggleRunAction()">Start</button>
+        <button mat-raised-button color="accent" [disabled]="!group.valid" class="py-25" style="width: 6rem"
+                (click)="handleToggleResetAction()">Reset</button>
+    </mat-card-footer>
+</mat-card>
+<mat-card class="bg-base flex-col-pos p-50" [class.d-none]="!(shown$ | async)"
+          style="position: fixed;inset: 0;z-index: 10;">
+    <mat-card-title-group class="align-items-center">
+        <span class="mat-title flex-fill my-0">Name: {{select$ | async}}</span>
+        <span class="mat-title flex-fill my-0">Swap Count: {{swapCount$ | async | number}}</span>
+        <span class="mat-title flex-fill my-0">Auxiliary Count: {{auxCount$ | async | number}}</span>
+        <span class="mat-title flex-fill my-0">Status: {{phase$ | async | dss}}</span>
+        <span class="mat-title flex-fill my-0">Time: {{timer$ | async | duration}}</span>
+        <button mat-icon-button [disabled]="(phase$ | async) !== 0" (click)="shown$.next(false)">
+            <mat-icon>close</mat-icon>
+        </button>
+    </mat-card-title-group>
+    <mat-card-content class="sort-grid" style="height: calc(100% - 40px)"
+                      [style.grid-template-columns]="'repeat(' + (columns$ | async) + ', auto)'">
+        <div class="bg-primary-100 d-flex flex-row-pos"
+             [class.bg-accent-100]="(nextIndex$ | async) === i || (lhsNextIndex$ | async) === i
+                            || (rhsNextIndex$ | async) === i"
+             [class.bg-warn-100]="(pivotIndex$ | async) === i || (lhsPivotIndex$ | async) === i
+                            || (rhsPivotIndex$ | async) === i"
+             *ngFor="let data of dataset$ | async; index as i">
+            <div class="bg-primary align-self-end"
+                 [class.bg-primary-900]="(currIndex$ | async) === i || (lhsCurrIndex$ | async) === i
+                    || (rhsCurrIndex$ | async) === i"
+                 [class.bg-accent-900]="(nextIndex$ | async) === i || (lhsNextIndex$ | async) === i
+                    || (rhsNextIndex$ | async) === i"
+                 [class.bg-warn-900]="(pivotIndex$ | async) === i"
+                 [class.bg-warn-700]="(lhsPivotIndex$ | async) === i"
+                 [class.bg-warn-300]="(rhsPivotIndex$ | async) === i"
+                 [ngStyle]="{'width': '100%', 'height': (data.ratio | percent: '1.2-4')}"></div>
+        </div>
+    </mat-card-content>
+</mat-card>
