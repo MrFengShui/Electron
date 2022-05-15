@@ -1,0 +1,67 @@
+<mat-card class="mat-elevation-z0 demo-maze-view-wrapper h-100">
+    <form [formGroup]="group" #form>
+        <mat-card-header class="sx-50">
+            <mat-card-title class="mb-125" style="font-size: 24px">Maze Generation Algorithms</mat-card-title>
+            <mat-card-subtitle class="mb-0">Total: {{nameToggles.length | number}}</mat-card-subtitle>
+            <span class="flex-fill"></span>
+            <mat-form-field appearance="standard">
+                <mat-label>Maze Name</mat-label>
+                <mat-select formControlName="nameCtrl">
+                    <mat-option [disabled]="toggle.code === 'none'" [value]="toggle.code"
+                                *ngFor="let toggle of nameToggles">
+                        {{toggle.text}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="standard">
+                <mat-label>Maze Speed</mat-label>
+                <mat-select formControlName="speedCtrl">
+                    <mat-option [disabled]="toggle.code === 'none'" [value]="toggle.code"
+                                *ngFor="let toggle of speedToggles">
+                        <span>{{toggle.text}}</span>
+                        <span *ngIf="toggle.code !== 'none'">({{toggle.code}}ms)</span>
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="standard">
+                <mat-label>Maze Grid Columns</mat-label>
+                <input matInput type="text" formControlName="colsCtrl">
+            </mat-form-field>
+            <mat-form-field appearance="standard">
+                <mat-label>Maze Grid Rows</mat-label>
+                <input matInput type="text" formControlName="rowsCtrl">
+            </mat-form-field>
+        </mat-card-header>
+    </form>
+    <mat-divider inset style="margin: 0 -1rem 1rem;width: calc(100% + 2rem);"></mat-divider>
+    <mat-card-content class="h-100"></mat-card-content>
+    <mat-divider inset style="margin: 0 -1rem 1rem;width: calc(100% + 2rem);"></mat-divider>
+    <mat-card-footer class="d-flex justify-content-end align-items-center sx-50 m-0 p-0">
+        <button mat-raised-button color="primary" [disabled]="!group.valid" class="py-25" style="width: 6rem"
+                (click)="handleToggleRunAction()">Start</button>
+        <button mat-raised-button color="accent" [disabled]="!group.valid" class="py-25" style="width: 6rem"
+                (click)="handleToggleResetAction()">Reset</button>
+    </mat-card-footer>
+</mat-card>
+<mat-card class="bg-base flex-col-pos p-50" [class.d-none]="!(shown$ | async)"
+          style="position: fixed;inset: 0;z-index: 10;">
+    <mat-card-title-group class="align-items-center">
+        <span class="mat-title flex-fill my-0">Name: {{select$ | async}}</span>
+        <span class="mat-title flex-fill my-0">Status: {{phase$ | async | mss}}</span>
+        <span class="mat-title flex-fill my-0">Time: {{timer$ | async | duration}}</span>
+        <button mat-icon-button [disabled]="(phase$ | async) !== 0" (click)="shown$.next(false)">
+            <mat-icon>close</mat-icon>
+        </button>
+    </mat-card-title-group>
+    <mat-card-content class="maze-grid border bt-1 bb-1 bl-1 br-1 b-primary" style="height: calc(100% - 40px)"
+                      [style.grid-template-columns]="'repeat(' + (columns$ | async) + ', auto)'">
+        <div class="border bt-1 bb-1 bl-1 br-1 b-primary" style="box-sizing: border-box" #tile
+             [class.bg-warn]="(scanner$ | async) === cell.y"
+             [class.bg-warn-400]="(startMarker$ | async)?.x === cell.x && (startMarker$ | async)?.y === cell.y"
+             [class.bg-warn-600]="(finalMarker$ | async)?.x === cell.x && (finalMarker$ | async)?.y === cell.y"
+             [class.bg-accent]="(marker$ | async)?.x === cell.x && (marker$ | async)?.y === cell.y"
+             [class.bg-accent-400]="(currMarker$ | async)?.x === cell.x && (currMarker$ | async)?.y === cell.y"
+             [class.bg-accent-600]="(nextMarker$ | async)?.x === cell.x && (nextMarker$ | async)?.y === cell.y"
+             *ngFor="let cell of cells$ | async"></div>
+    </mat-card-content>
+</mat-card>

@@ -1,6 +1,17 @@
-import {AfterViewInit, Component, HostBinding, Inject, Renderer2} from '@angular/core';
-import {BehaviorSubject, Subject} from "rxjs";
+import {animate, state, style, transition, trigger} from "@angular/animations";
+import {
+    AfterViewInit,
+    Component,
+    HostBinding,
+    HostListener,
+    Inject, NgZone,
+    Renderer2,
+    TemplateRef,
+    ViewChild
+} from '@angular/core';
 import {DOCUMENT} from "@angular/common";
+import {MatDialog, MatDialogRef} from "@angular/material/dialog";
+import {BehaviorSubject, interval, Subject, Subscription} from "rxjs";
 
 interface PaletteToggleModel {
 
@@ -21,15 +32,47 @@ interface RouteLinkModel {
 }
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html'
+    animations: [
+        trigger('BRIGHT_MORE_LESS', [
+            state('more', style({filter: 'brightness(2.0)'})),
+            state('less', style({filter: 'brightness(1.0)'})),
+            transition('more <=> less', animate('1000ms 0ms linear'))
+        ])
+    ],
+    selector: 'app-root',
+    templateUrl: './app.component.html'
 })
 export class AppComponent implements AfterViewInit {
 
+    @ViewChild('splash', {read: TemplateRef})
+    private splash!: TemplateRef<any>;
+
     @HostBinding('class') class: string = 'demo-root';
 
+    @HostListener('window:load')
+    private listenWindowOnload(): void {
+        // let subscription = this._zone.runTask(() =>
+        //     this.progress$.subscribe(value => {
+        //         if (value === 100) {
+        //             this.subscription?.unsubscribe();
+        //             subscription.unsubscribe();
+        //
+        //             let task = setTimeout(() => {
+        //                 clearTimeout(task);
+        //                 this.hideSplashScreen();
+        //             }, 1000);
+        //         }
+        //     }));
+    }
+
+    bright$: Subject<boolean> = new BehaviorSubject<boolean>(false);
+    progress$: Subject<number> = new BehaviorSubject<number>(0);
     toggle$: Subject<string> = new BehaviorSubject<string>('');
 
+    readonly tags: { title: string, subtitle: string } = {
+        title: 'Demospace Developed with Electron and Angular',
+        subtitle: 'Copyright © 2022 MrFengShui All Copyrights Reserved'
+    };
     readonly toggles: PaletteToggleModel[] = [
         {color: 'default', theme: 'dark', label: 'Default Dark Theme', style: '#673AB7', value: 'fd'},
         {color: 'default', theme: 'light', label: 'Default Light Theme', style: '#673AB7', value: 'fl'},
@@ -43,18 +86,28 @@ export class AppComponent implements AfterViewInit {
         {color: 'winter', theme: 'light', label: 'Winter Light Theme', style: '#3F51B5', value: 'nl'}
     ];
     readonly links: RouteLinkModel[] = [
-        {icon: 'sort_by_alpha', link: ['/demo', 'sort'], text: 'Sort Algorithms'}
+        {icon: 'face', link: ['/demo', 'icon'], text: 'SVG Icons'},
+        {icon: 'route', link: ['/demo', 'maze', 'generate'], text: 'Maze Generation Algorithms'},
+        {icon: 'sort_by_alpha', link: ['/demo', 'sort'], text: 'Sorting Algorithms'}
     ];
+
+    private subscription: Subscription | null = null;
+    private dialogRef: MatDialogRef<any> | null = null;
+    private progress: number = 0;
 
     constructor(
         @Inject(DOCUMENT)
         private _document: Document,
-        private _render: Renderer2
+        private _render: Renderer2,
+        private _zone: NgZone,
+        private _dialog: MatDialog
     ) {
     }
 
     ngAfterViewInit() {
         AppComponent.loadStorage().then(value => {
+            // this.showSplashScreen();
+
             if (value) {
                 this.toggle$.next(`${value.color[2]}${value.theme[0]}`);
                 this.renderColorTheme(value.color, value.theme);
@@ -98,6 +151,36 @@ export class AppComponent implements AfterViewInit {
         }
 
         return null;
+    }
+
+    private execLoadingProgress(): void {
+        this.subscription = this._zone.runTask(() => interval(1000)
+            .subscribe(value => {
+                this.bright$.next(value % 2 === 0);
+                this.progress += Math.random() * 5;
+                this.progress$.next(Math.min(this.progress, 100));
+            }));
+    }
+
+    private showSplashScreen(): void {
+        if (this.dialogRef === null) {
+            this.dialogRef = this._dialog.open(this.splash, {
+                minWidth: '100vw', minHeight: '100vh', maxWidth: '100vw', maxHeight: '100vh',
+                panelClass: ['demo-splash-screen']
+            });
+        }
+
+        let subscription = this.dialogRef.afterOpened().subscribe(() => {
+            this.execLoadingProgress();
+            subscription.unsubscribe();
+        });
+    }
+
+    private hideSplashScreen(): void {
+        if (this.dialogRef !== null) {
+            this.dialogRef.close();
+            this.dialogRef = null;
+        }
     }
 
 }

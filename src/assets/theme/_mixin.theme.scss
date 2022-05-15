@@ -34,6 +34,30 @@
             color: mat.get-color-from-palette($value);
         }
 
+        .border {
+            @each $key, $value in $list {
+                &.b-#{$key} {
+                    border-color: mat.get-color-from-palette($value);
+                }
+
+                &.bt-#{$key} {
+                    border-top-color: mat.get-color-from-palette($value);
+                }
+
+                &.bb-#{$key} {
+                    border-bottom-color: mat.get-color-from-palette($value);
+                }
+
+                &.bl-#{$key} {
+                    border-left-color: mat.get-color-from-palette($value);
+                }
+
+                &.br-#{$key} {
+                    border-right-color: mat.get-color-from-palette($value);
+                }
+            }
+        }
+
         @for $i from 1 through 9 {
             .bg-#{$key}-#{$i * 100} {
                 background-color: mat.get-color-from-palette($value, $i * 100);

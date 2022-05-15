@@ -1,14 +1,13 @@
 import {NgModule} from '@angular/core';
+import {HttpClientModule} from "@angular/common/http";
 import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
 import {GlobalMaterialModule} from "./global/module/material.module";
 import {GlobalRouteModule} from './global/module/route.module';
-
+import {GlobalWebModule} from "./global/module/web.module";
 
 import {AppComponent} from './app.component';
-
-import {GlobalWebModule} from "./global/module/web.module";
 
 @NgModule({
     declarations: [
@@ -17,6 +16,7 @@ import {GlobalWebModule} from "./global/module/web.module";
     imports: [
         BrowserModule,
         BrowserAnimationsModule,
+        HttpClientModule,
         GlobalMaterialModule,
         GlobalRouteModule,
         GlobalWebModule,

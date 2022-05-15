@@ -28,7 +28,48 @@ $align-map: (block, flex, grid, none);
     }
 }
 
-$space-tag: ('m': margin, 'p': padding);
+$border-map: (
+    "0": 0,
+    "1": 1px,
+    "2": 2px,
+    "3": 4px,
+);
+.border {
+    border-style: solid;
+    border-width: 0;
+    box-sizing: border-box;
+
+    @each $key, $value in $border-map {
+        &.b-#{$key} {
+            border-width: $value;
+        }
+
+        &.bt-#{$key} {
+            border-top-width: $value !important;
+        }
+
+        &.bb-#{$key} {
+            border-bottom-width: $value !important;
+        }
+
+        &.bl-#{$key} {
+            border-left-width: $value !important;
+        }
+
+        &.br-#{$key} {
+            border-right-width: $value !important;
+        }
+    }
+}
+
+$direction: ("row-pos": row, "row-neg": row-reverse, "col-pos": column, "col-neg": column-reverse);
+@each $key, $value in $direction {
+    .flex-#{$key} {
+        flex-direction: $value !important;
+    }
+}
+
+$space-tag: ("m": margin, "p": padding);
 $space-map: (
     0: 0, 25: 0.25rem, 50: 0.5rem, 75: 0.75rem, 100: 1rem,
     125: 1.25rem, 150: 1.5rem, 175: 1.75rem, 200: 2rem, 250: 2.5rem,
@@ -118,6 +159,27 @@ $size-map: (
     flex: auto;
 }
 
+.demo-splash-screen {
+    .mat-dialog-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        .logo {
+            background-image: url(assets/image/splash-screen.jpg) !important;
+            background-origin: border-box !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-size: cover !important;
+        }
+
+        .shadow {
+            filter: drop-shadow(0.25rem 0.5rem 1rem #000000);
+        }
+    }
+}
+
 .demo-root {
     .demo-root-wrapper {
         display: flex;
@@ -145,10 +207,10 @@ $size-map: (
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
+    }
 
-        .maze-grid {
-            display: grid;
-            place-items: stretch;
-        }
+    .maze-grid {
+        display: grid;
+        place-items: stretch;
     }
 }

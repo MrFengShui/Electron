@@ -13,16 +13,16 @@ import {BehaviorSubject, Subject, Subscription, timer} from "rxjs";
 
 import {
     DataType, OrderType, SpeedType,
-    DemoStableSortService, DemoUnstableSortService, DemoOtherSortService, DemoSortUtilityService,
+    DemoComparisonSortService, DemoDistributionSortService, DemoOtherSortService, DemoSortUtilityService, BaseType,
 } from "./sort.service";
 
 import {ToggleModel} from "../../global/model/global.model";
 
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
-    selector: 'app-demo-sort-view',
+    selector: 'demo-sort-view',
     templateUrl: './sort.component.html',
-    providers: [DemoSortUtilityService, DemoOtherSortService, DemoStableSortService, DemoUnstableSortService]
+    providers: [DemoSortUtilityService, DemoOtherSortService, DemoComparisonSortService, DemoDistributionSortService]
 })
 export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
 
@@ -48,54 +48,59 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
 
     nameGroups: Array<{ label: string, toggles: ToggleModel<string>[] }> = [
         {
-            label: 'Stable Sort',
+            label: 'Comparison Sort',
             toggles: [
-                {code: 'bst', text: 'BST Sort'},
                 {code: 'bubble', text: 'Bubble Sort'},
                 {code: 'bubble-opt', text: 'Optimized Bubble Sort'},
-                {code: 'bucket', text: 'Bucket Sort'},
                 {code: 'cocktail', text: 'Cock Tail Sort'},
-                {code: 'count', text: 'Counting Sort'},
+                {code: 'combo', text: 'Combo Sort'},
+                {code: 'cycle', text: 'Cycle Sort'},
                 {code: 'exchange', text: 'Exchange Sort'},
+                {code: 'heap', text: 'Heap Sort'},
                 {code: 'insert', text: 'Insertion Sort'},
                 {code: 'insert-bi', text: 'Binary Insertion Sort'},
-                {code: 'library', text: 'Library Sort'},
+                {code: 'intro', text: 'Introspective Sort'},
                 {code: 'merge-bu', text: 'Merge Sort By Bottom-Up'},
                 {code: 'merge-td', text: 'Merge Sort By Top-Down'},
                 {code: 'merge-4way', text: 'Merge Sort By 4-Way'},
                 {code: 'merge-ip', text: 'Merge Sort By In-Place'},
                 {code: 'odd-even', text: 'Odd-Even Sort'},
-                {code: 'pigeon', text: 'Pigeon Hole Sort'},
-                {code: 'radix-lsd', text: 'Radix Sort By LSD'},
-                {code: 'radix-lsd-2', text: 'Radix Sort By LSD-Base 2'},
-                {code: 'radix-lsd-4', text: 'Radix Sort By LSD-Base 4'},
-                {code: 'radix-lsd-8', text: 'Radix Sort By LSD-Base 8'},
-                {code: 'radix-lsd-16', text: 'Radix Sort By LSD-Base 16'},
-                {code: 'radix-msd', text: 'Radix Sort By MSD'},
-                {code: 'slow', text: 'Slow Sort'},
-                {code: 'strand', text: 'Strand Sort'},
-                {code: 'tim-bu', text: 'Tim Sort By Bottom-Up'},
-                {code: 'tim-td', text: 'Tim Sort By Top-Down'}
-            ]
-        },
-        {
-            label: 'Unstable Sort',
-            toggles: [
-                {code: 'combo', text: 'Combo Sort'},
-                {code: 'cycle', text: 'Cycle Sort'},
-                {code: 'flash', text: 'Flash Sort'},
-                {code: 'heap', text: 'Heap Sort'},
-                {code: 'intro', text: 'Introspective Sort'},
-                {code: 'patience', text: 'Patience Sort'},
                 {code: 'quick', text: 'Quick Sort'},
-                // {code: 'quick-part', text: 'Partial Quick Sort'},
-                {code: 'quick-2way', text: 'Quick Sort By 2-Way'},
-                {code: 'quick-3way', text: 'Quick Sort By 3-Way'},
+                {code: 'quick-2way', text: 'Quick Sort in 2-Way'},
+                {code: 'quick-3way', text: 'Quick Sort in 3-Way'},
                 {code: 'quick-dp', text: 'Quick Sort By Dual Pivot'},
                 {code: 'select', text: 'Selection Sort'},
                 {code: 'select-db', text: 'Double Selection Sort'},
                 {code: 'shell', text: 'Shell Sort'},
-                {code: 'tour', text: 'Tournament Sort'},
+                {code: 'slow', text: 'Slow Sort'},
+                {code: 'strand', text: 'Strand Sort'},
+                {code: 'tim-bu', text: 'Tim Sort By Bottom-Up'},
+                {code: 'tim-td', text: 'Tim Sort By Top-Down'},
+                {code: 'tour', text: 'Tournament Sort'}
+            ]
+        },
+        {
+            label: 'Distribution Sort',
+            toggles: [
+                {code: 'bst', text: 'Binary Search Tree Sort'},
+                {code: 'bucket-2', text: 'Bucket Sort in Base 2'},
+                {code: 'bucket-8', text: 'Bucket Sort in Base 8'},
+                {code: 'bucket-10', text: 'Bucket Sort in Base 10'},
+                {code: 'bucket-16', text: 'Bucket Sort in Base 16'},
+                {code: 'count', text: 'Counting Sort'},
+                {code: 'flash', text: 'Flash Sort'},
+                {code: 'pigeon', text: 'Pigeon Hole Sort'},
+                {code: 'patience', text: 'Patience Sort'},
+                {code: 'radix-lsd-2', text: 'LSD Radix Sort in Base 2'},
+                {code: 'radix-lsd-4', text: 'LSD Radix Sort in Base 4'},
+                {code: 'radix-lsd-8', text: 'LSD Radix Sort in Base 8'},
+                {code: 'radix-lsd-10', text: 'LSD Radix Sort in Base 10'},
+                {code: 'radix-lsd-16', text: 'LSD Radix Sort in Base 16'},
+                {code: 'radix-msd-2', text: 'MSD Radix Sort in Base 2'},
+                {code: 'radix-msd-4', text: 'MSD Radix Sort in Base 4'},
+                {code: 'radix-msd-8', text: 'MSD Radix Sort in Base 8'},
+                {code: 'radix-msd-10', text: 'MSD Radix Sort in Base 10'},
+                {code: 'radix-msd-16', text: 'MSD Radix Sort in Base 16'}
             ]
         },
         {
@@ -143,8 +148,8 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
         private _cdr: ChangeDetectorRef,
         private _zone: NgZone,
         private _dsus: DemoSortUtilityService,
-        private _dsss: DemoStableSortService,
-        private _duss: DemoUnstableSortService,
+        private _dcss: DemoComparisonSortService,
+        private _ddss: DemoDistributionSortService,
         private _doss: DemoOtherSortService
     ) {
     }
@@ -161,13 +166,13 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
 
     ngAfterViewInit() {
         // let dataset: DataType[] = [
-        //     {value: 8, ratio: 0.1}, {value: 5, ratio: 0.2}, {value: 7, ratio: 0.3}, {value: 3, ratio: 0.4},
-        //     {value: 0, ratio: 0.5}, {value: 9, ratio: 0.6}, {value: 6, ratio: 0.7}, {value: 2, ratio: 0.8},
-        //     {value: 4, ratio: 0.9}, {value: 1, ratio: 1.0}
+        //     {value: 8, ratio: 0}, {value: 2, ratio: 0}, {value: 4, ratio: 0}, {value: 6, ratio: 0},
+        //     {value: 7, ratio: 0}, {value: 3, ratio: 0}, {value: 1, ratio: 0}, {value: 9, ratio: 0},
+        //     {value: 5, ratio: 0}, {value: 0, ratio: 0}
         // ];
-        // let dataset: DataType[] = Array.from({length: 8})
-        //     .map(() => ({value: Math.floor(Math.random() * 20 + 1), ratio: 0}));
-        // this._doss.sortByPairwise(dataset, 10, 'ascent', value => console.log(value)).then();
+        // this._dcss.sortByLibrary(dataset, 10, 'ascent', value => console.log()).then();
+        // let dataset: DataType[] = Array.from({length: 10})
+        //     .map(() => ({value: Math.floor(Math.random() * 10 + 1), ratio: 0}));
         // console.log(dataset);
         // let data: DataType = {value: 128, ratio: 0};
         // console.log(data, this._dsus.calcDigit(data, 3));
@@ -199,8 +204,8 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
                 this.auxCount$.next(0);
                 this._dsus.shuffle(this.dataset, value => {
                     this.phase$.next(1);
-                    this.currIndex$.next(value.currIndex);
-                    this.nextIndex$.next(value.nextIndex);
+                    this.lhsPivotIndex$.next(value.lhsPivotIndex);
+                    this.rhsPivotIndex$.next(value.rhsPivotIndex);
                 }).then(() => {
                     this.phase$.next(2);
                     let subscription = timer(0, 1000)
@@ -274,8 +279,17 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             case 'bubble-opt':
                 this.execBubbleOptimalSort(speed, order, subscription);
                 break;
-            case 'bucket':
-                this.execBucketSort(speed, order, subscription);
+            case 'bucket-2':
+                this.execBucketSort(2, speed, order, subscription);
+                break;
+            case 'bucket-8':
+                this.execBucketSort(8, speed, order, subscription);
+                break;
+            case 'bucket-10':
+                this.execBucketSort(10, speed, order, subscription);
+                break;
+            case 'bucket-16':
+                this.execBucketSort(16, speed, order, subscription);
                 break;
             case 'cocktail':
                 this.execCockTailSort(speed, order, subscription);
@@ -315,9 +329,6 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
                 break;
             case 'intro':
                 this.execIntroSort(speed, order, subscription);
-                break;
-            case 'library':
-                this.execLibrarySort(speed, order, subscription);
                 break;
             case 'merge-bu':
                 this.execMergeBUSort(speed, order, subscription);
@@ -364,23 +375,35 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             case 'pigeon':
                 this.execPigeonHoleSort(speed, order, subscription);
                 break;
-            case 'radix-lsd':
-                this.execRadixLSDSort(speed, order, subscription);
-                break;
             case 'radix-lsd-2':
-                this.execRadixBaseLSDSort(2, speed, order, subscription);
+                this.execRadixLSDSort(2, speed, order, subscription);
                 break;
             case 'radix-lsd-4':
-                this.execRadixBaseLSDSort(4, speed, order, subscription);
+                this.execRadixLSDSort(4, speed, order, subscription);
                 break;
             case 'radix-lsd-8':
-                this.execRadixBaseLSDSort(8, speed, order, subscription);
+                this.execRadixLSDSort(8, speed, order, subscription);
+                break;
+            case 'radix-lsd':
+                this.execRadixLSDSort(10, speed, order, subscription);
                 break;
             case 'radix-lsd-16':
-                this.execRadixBaseLSDSort(16, speed, order, subscription);
+                this.execRadixLSDSort(16, speed, order, subscription);
                 break;
-            case 'radix-msd':
-                this.execRadixMSDSort(speed, order, subscription);
+            case 'radix-msd-2':
+                this.execRadixMSDSort(2, speed, order, subscription);
+                break;
+            case 'radix-msd-4':
+                this.execRadixMSDSort(4, speed, order, subscription);
+                break;
+            case 'radix-msd-8':
+                this.execRadixMSDSort(8, speed, order, subscription);
+                break;
+            case 'radix-msd-10':
+                this.execRadixMSDSort(10, speed, order, subscription);
+                break;
+            case 'radix-msd-16':
+                this.execRadixMSDSort(16, speed, order, subscription);
                 break;
             case 'select':
                 this.execSelectionSort(speed, order, subscription);
@@ -486,7 +509,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execBSTSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByBST(this.dataset, speed, order, value => {
+        this._ddss.sortByBST(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.auxCount$.next(value.auxCount);
@@ -494,7 +517,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execBubbleSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByBubble(this.dataset, speed, order, value => {
+        this._dcss.sortByBubble(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.currIndex$.next(value.currIndex);
             this.nextIndex$.next(value.nextIndex);
@@ -503,7 +526,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execBubbleOptimalSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByBubbleOptimal(this.dataset, speed, order, value => {
+        this._dcss.sortByBubbleOptimal(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.currIndex$.next(value.currIndex);
@@ -512,8 +535,8 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
         }).then(() => this.execComplete(this.dataset.length, speed, subscription));
     }
 
-    private execBucketSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByBucket(this.dataset, 16, speed, order, value => {
+    private execBucketSort(base: BaseType, speed: SpeedType, order: OrderType, subscription: Subscription): void {
+        this._ddss.sortByBucket(this.dataset, base, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.currIndex$.next(value.currIndex);
@@ -524,7 +547,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execCockTailSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByCockTail(this.dataset, speed, order, value => {
+        this._dcss.sortByCockTail(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.currIndex$.next(value.currIndex);
@@ -534,7 +557,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execComboSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortByCombo(this.dataset, speed, order, value => {
+        this._dcss.sortByCombo(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.currIndex$.next(value.currIndex);
             this.nextIndex$.next(value.nextIndex);
@@ -543,7 +566,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execCountSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByCount(this.dataset, speed, order, value => {
+        this._ddss.sortByCount(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.auxCount$.next(value.auxCount);
@@ -551,7 +574,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execCycleSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortByCycle(this.dataset, speed, order, value => {
+        this._dcss.sortByCycle(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.currIndex$.next(value.currIndex);
@@ -561,7 +584,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execExchangeSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByExchange(this.dataset, speed, order, value => {
+        this._dcss.sortByExchange(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.currIndex$.next(value.currIndex);
             this.nextIndex$.next(value.nextIndex);
@@ -570,7 +593,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execFlashSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortByFlash(this.dataset, speed, order, value => {
+        this._ddss.sortByFlash(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.currIndex$.next(value.currIndex);
@@ -610,7 +633,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execHeapSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortByHeap(this.dataset, 0, speed, order, value => {
+        this._dcss.sortByHeap(this.dataset, 0, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.currIndex$.next(value.currIndex);
             this.nextIndex$.next(value.nextIndex);
@@ -619,7 +642,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execInsertionSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByInsertion(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
+        this._dcss.sortByInsertion(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
             value => {
                 this.dataset$.next(value.dataset);
                 this.pivotIndex$.next(value.pivotIndex);
@@ -630,7 +653,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execInsertionBinarySort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByInsertionBinary(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
+        this._dcss.sortByInsertionBinary(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
             value => {
                 this.dataset$.next(value.dataset);
                 this.pivotIndex$.next(value.pivotIndex);
@@ -641,16 +664,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execIntroSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortByIntro(this.dataset, speed, order, value => {
-            this.dataset$.next(value.dataset);
-            this.currIndex$.next(value.currIndex);
-            this.nextIndex$.next(value.nextIndex);
-            this.swapCount$.next(value.swapCount);
-        }).then(() => this.execComplete(this.dataset.length, speed, subscription));
-    }
-
-    private execLibrarySort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByLibrary(this.dataset, speed, order, value => {
+        this._dcss.sortByIntro(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.currIndex$.next(value.currIndex);
             this.nextIndex$.next(value.nextIndex);
@@ -659,7 +673,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execMergeBUSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByMergeBU(this.dataset, speed, order, value => {
+        this._dcss.sortByMergeBU(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.currIndex$.next(value.currIndex);
@@ -669,7 +683,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execMergeTDSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByMergeTD(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
+        this._dcss.sortByMergeTD(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
             value => {
                 this.dataset$.next(value.dataset);
                 this.pivotIndex$.next(value.pivotIndex);
@@ -680,7 +694,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execMerge4WaySort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByMerge4Way(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
+        this._dcss.sortByMerge4Way(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
             value => {
                 this.dataset$.next(value.dataset);
                 this.pivotIndex$.next(value.pivotIndex);
@@ -691,7 +705,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execMergeInPlaceSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByMergeInPlace(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
+        this._dcss.sortByMergeInPlace(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
             value => {
                 this.dataset$.next(value.dataset);
                 this.pivotIndex$.next(value.pivotIndex);
@@ -702,7 +716,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execOddEvenSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByOddEven(this.dataset, speed, order, value => {
+        this._dcss.sortByOddEven(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.currIndex$.next(value.currIndex);
             this.nextIndex$.next(value.nextIndex);
@@ -748,7 +762,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execPatienceSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortByPatience(this.dataset, speed, order, value => {
+        this._ddss.sortByPatience(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.auxCount$.next(value.auxCount);
@@ -756,14 +770,15 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execPigeonHoleSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByPigeonHole(this.dataset, speed, order, value => {
+        this._ddss.sortByPigeonHole(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
+            this.auxCount$.next(value.auxCount);
         }).then(() => this.execComplete(this.dataset.length, speed, subscription));
     }
 
     private execQuickSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortByQuick(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
+        this._dcss.sortByQuick(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
             value => {
                 this.dataset$.next(value.dataset);
                 this.pivotIndex$.next(value.pivotIndex);
@@ -774,7 +789,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execQuick2WaySort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortByQuick2Way(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
+        this._dcss.sortByQuick2Way(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
             value => {
                 this.dataset$.next(value.dataset);
                 this.pivotIndex$.next(value.pivotIndex);
@@ -785,7 +800,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execQuick3WaySort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortByQuick3Way(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
+        this._dcss.sortByQuick3Way(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
             value => {
                 this.dataset$.next(value.dataset);
                 this.pivotIndex$.next(value.pivotIndex);
@@ -796,7 +811,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execQuickDPSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortByQuickDualPivot(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
+        this._dcss.sortByQuickDualPivot(this.dataset, 0, this.dataset.length - 1, 0, speed, order,
             value => {
                 this.dataset$.next(value.dataset);
                 this.lhsPivotIndex$.next(value.lhsPivotIndex);
@@ -807,8 +822,8 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             }).then(() => this.execComplete(this.dataset.length, speed, subscription));
     }
 
-    private execRadixLSDSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByRadixLSD(this.dataset, speed, order,
+    private execRadixLSDSort(base: BaseType, speed: SpeedType, order: OrderType, subscription: Subscription): void {
+        this._ddss.sortByRadixLSD(this.dataset, base, speed, order,
             value => {
                 this.dataset$.next(value.dataset);
                 this.pivotIndex$.next(value.pivotIndex);
@@ -818,29 +833,19 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             }).then(() => this.execComplete(this.dataset.length, speed, subscription));
     }
 
-    private execRadixBaseLSDSort(base: 2 | 4 | 8 | 16, speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByRadixBaseLSD(this.dataset, base, speed, order,
-            value => {
+    private execRadixMSDSort(base: BaseType, speed: SpeedType, order: OrderType, subscription: Subscription): void {
+        this._ddss.sortByRadixMSD(this.dataset, base, speed, order, value => {
                 this.dataset$.next(value.dataset);
                 this.pivotIndex$.next(value.pivotIndex);
                 this.currIndex$.next(value.currIndex);
                 this.nextIndex$.next(value.nextIndex);
+                this.swapCount$.next(value.swapCount);
                 this.auxCount$.next(value.auxCount);
-            }).then(() => this.execComplete(this.dataset.length, speed, subscription));
-    }
-
-    private execRadixMSDSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByRadixMSD(this.dataset, speed, order,
-            value => {
-                this.dataset$.next(value.dataset);
-                this.pivotIndex$.next(value.pivotIndex);
-                this.currIndex$.next(value.currIndex);
-                this.nextIndex$.next(value.nextIndex);
             }).then(() => this.execComplete(this.dataset.length, speed, subscription));
     }
 
     private execSelectionSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortBySelection(this.dataset, speed, order, value => {
+        this._dcss.sortBySelection(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.currIndex$.next(value.currIndex);
@@ -850,7 +855,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execSelectionDoubleSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortBySelectionDouble(this.dataset, speed, order, value => {
+        this._dcss.sortBySelectionDouble(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.lhsPivotIndex$.next(value.lhsPivotIndex);
             this.rhsPivotIndex$.next(value.rhsPivotIndex);
@@ -863,7 +868,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execShellSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortByShell(this.dataset, speed, order, value => {
+        this._dcss.sortByShell(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.currIndex$.next(value.currIndex);
@@ -895,7 +900,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execStrandSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByStrand(this.dataset, speed, order, value => {
+        this._dcss.sortByStrand(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.auxCount$.next(value.auxCount);
@@ -903,7 +908,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execTimBUSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByTimBU(this.dataset, speed, order, value => {
+        this._dcss.sortByTimBU(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.currIndex$.next(value.currIndex);
@@ -914,7 +919,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execTimTDSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._dsss.sortByTimTD(this.dataset, 0, this.dataset.length - 1, 0, 0, 0,
+        this._dcss.sortByTimTD(this.dataset, 0, this.dataset.length - 1, 0, 0, 0,
             speed, order, value => {
                 this.dataset$.next(value.dataset);
                 this.pivotIndex$.next(value.pivotIndex);
@@ -926,7 +931,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execTournament(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._duss.sortByTournament(this.dataset, speed, order, value => {
+        this._dcss.sortByTournament(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.currIndex$.next(value.currIndex);
             this.nextIndex$.next(value.nextIndex);

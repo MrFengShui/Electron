@@ -1,6 +1,7 @@
 <div class="demo-root-wrapper h-100">
     <mat-toolbar color="primary">
-        <img src="assets/image/logo.svg" alt="logo.svg" height="48" style="filter: drop-shadow(0 0 2px #FAFAFA)">
+        <img src="assets/image/electron-full.svg" alt="logo.svg" height="48"
+             style="filter: brightness(2.0) drop-shadow(0 0 2px #212121)">
         <span class="flex-fill"></span>
         <button mat-button [matMenuTriggerFor]="palette">
             <mat-icon>palette</mat-icon>
@@ -33,3 +34,21 @@
         </button>
     </mat-radio-group>
 </mat-menu>
+<ng-template #splash>
+    <div class="logo d-flex flex-fill justify-content-center align-items-center sx-100 w-100"
+         style="border-radius: 0.25rem">
+        <img src="assets/image/angular-less.svg" alt="angular-less" width="256" height="256" class="shadow">
+        <mat-icon class="shadow" style="font-size: 8rem;width: auto;height: auto;">add</mat-icon>
+        <img src="assets/image/electron-less.svg" alt="electron-less" width="256" height="256" class="shadow">
+    </div>
+    <mat-progress-bar color="accent" mode="determinate" [value]="progress$ | async" class="shadow my-200"
+                      style="height: 0.75rem"></mat-progress-bar>
+    <div class="d-flex justify-content-between align-items-center w-100">
+        <div class="d-flex flex-fill flex-col-pos sy-25">
+            <span class="mat-headline">{{tags.title}}</span>
+            <span class="mat-body-1">{{tags.subtitle}}</span>
+        </div>
+        <img [@BRIGHT_MORE_LESS]="(bright$ | async) ? 'more' : 'less'" src="assets/image/electron-full.svg"
+             alt="electron-full" height="64" class="shadow">
+    </div>
+</ng-template>

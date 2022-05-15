@@ -32,18 +32,18 @@ export type DataType = { value: number, ratio: number, digit?: number };
 export type RangeType = { lhs: number, rhs: number };
 export type OrderType = 'ascent' | 'descent';
 export type SpeedType = 5 | 10 | 100 | 250 | 500;
+export type BaseType = 2 | 4 | 8 | 10 | 16;
 
 @Injectable()
 export class DemoSortUtilityService {
 
     public PROTOTYPE_DATASET: number[] = Array.from({length: 1024}).map((_, index) => index + 1);
 
-    public binarySearch(dataset: DataType[], lhs: number, rhs: number, data: DataType,
-                        order: OrderType): number {
+    public binarySearch(dataset: DataType[], lhs: number, rhs: number, data: DataType, order: OrderType): number {
         let mid: number;
 
         while (lhs <= rhs) {
-            mid = Math.floor((rhs - lhs) + lhs);
+            mid = Math.floor((rhs - lhs) * 0.5 + lhs);
 
             if (order === 'ascent' && dataset[mid].value < data.value) {
                 lhs = mid + 1;
@@ -188,16 +188,15 @@ export class DemoSortUtilityService {
 
             if (i !== k) {
                 await this.swap(dataset, i, k);
-                await callback({dataset, currIndex: i, nextIndex: k});
             }
 
             k = Math.floor(Math.random() * dataset.length);
 
             if (j !== k) {
                 await this.swap(dataset, j, k);
-                await callback({dataset, currIndex: j, nextIndex: k});
             }
 
+            await callback({dataset, lhsPivotIndex: i, rhsPivotIndex: k});
             i++;
             j--;
             await sleep(10);
@@ -1176,7 +1175,7 @@ export class DemoOtherSortService {
 }
 
 @Injectable()
-export class DemoStableSortService {
+export class DemoComparisonSortService {
 
     constructor(private _service: DemoSortUtilityService) {
     }
@@ -1224,87 +1223,6 @@ export class DemoStableSortService {
     //     reverse(dataset, start, start + amount);
     //     reverse(dataset, start + amount, end);
     // }
-
-    /**
-     *
-     * @param dataset
-     * @param speed
-     * @param order
-     * @param callback
-     */
-    public async sortByBST(dataset: DataType[], speed: SpeedType, order: OrderType,
-                           callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let list: DataType[], tree: BSTNode | null = null, count: number = 0;
-
-        for (let i = 0; i < dataset.length; i++) {
-            count += 1;
-            tree = this.insertOfBST(tree, dataset[i], order);
-            callback({dataset, pivotIndex: i, auxCount: count});
-            await sleep(speed);
-        }
-
-        list = this.traverseOfBST(tree, []);
-
-        for (let i = 0; i < list.length; i++) {
-            count += 1;
-            dataset[i] = list[i];
-            callback({dataset, pivotIndex: i, auxCount: count});
-            await sleep(speed);
-        }
-
-        callback({dataset, auxCount: count});
-    }
-
-    /**
-     *
-     * @param tree
-     * @param data
-     * @param order
-     * @private
-     */
-    private insertOfBST(tree: BSTNode | null, data: DataType, order: OrderType): BSTNode {
-        if (tree === null) {
-            return {mid: data, lhs: null, rhs: null};
-        }
-
-        if (order === 'ascent') {
-            if (data.value < tree.mid.value) {
-                tree.lhs = this.insertOfBST(tree.lhs, data, order);
-            }
-
-            if (data.value > tree.mid.value) {
-                tree.rhs = this.insertOfBST(tree.rhs, data, order);
-            }
-        }
-
-        if (order === 'descent') {
-            if (data.value > tree.mid.value) {
-                tree.lhs = this.insertOfBST(tree.lhs, data, order);
-            }
-
-            if (data.value < tree.mid.value) {
-                tree.rhs = this.insertOfBST(tree.rhs, data, order);
-            }
-        }
-
-        return tree;
-    }
-
-    /**
-     *
-     * @param tree
-     * @param list
-     * @private
-     */
-    private traverseOfBST(tree: BSTNode | null, list: DataType[]): DataType[] {
-        if (tree !== null) {
-            list = this.traverseOfBST(tree.lhs, list);
-            list.push(tree.mid);
-            list = this.traverseOfBST(tree.rhs, list);
-        }
-
-        return list;
-    }
 
     /**
      *
@@ -1395,58 +1313,6 @@ export class DemoStableSortService {
     /**
      *
      * @param dataset
-     * @param span
-     * @param speed
-     * @param order
-     * @param callback
-     */
-    public async sortByBucket(dataset: DataType[], span: number, speed: SpeedType, order: OrderType,
-                              callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let buckets: DataType[][] = Array.from({length: Math.ceil(dataset.length / span)}).map(() => []);
-        let index: number = 0, base: number = Math.ceil(dataset.length / span);
-        let swapCount: number = 0, auxCount: number = 0;
-
-        for (let i = 0; i < dataset.length; i++) {
-            let idx: number = Math.floor((dataset[i].value - 1) / span);
-
-            if (order === 'ascent') {
-                buckets[idx].push(dataset[i]);
-            }
-
-            if (order === 'descent') {
-                buckets[base - idx - 1].push(dataset[i]);
-            }
-
-            auxCount += 1;
-            callback({dataset, pivotIndex: i, auxCount});
-            await sleep(speed);
-        }
-
-        for (let i = 0; i < buckets.length; i++) {
-            for (let j = 0; j < buckets[i].length; j++) {
-                auxCount += 1;
-                dataset[index++] = buckets[i][j];
-                callback({dataset, pivotIndex: index, auxCount});
-                await sleep(speed);
-            }
-        }
-
-        for (let i = 0; i < dataset.length; i += span) {
-            await this.sortByInsertion(dataset, i, i + span - 1, swapCount, speed, order, value => {
-                swapCount = value.swapCount as number;
-                callback({...value, swapCount, auxCount});
-            });
-            await sleep(speed);
-        }
-
-        buckets.forEach(bucket => bucket.length = 0);
-        buckets.length = 0;
-        callback({dataset, swapCount, auxCount});
-    }
-
-    /**
-     *
-     * @param dataset
      * @param speed
      * @param order
      * @param callback
@@ -1512,69 +1378,124 @@ export class DemoStableSortService {
      * @param order
      * @param callback
      */
-    public async sortByCount(dataset: DataType[], speed: SpeedType, order: OrderType,
+    public async sortByCombo(dataset: DataType[], speed: SpeedType, order: OrderType,
                              callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let min: DataType = dataset[this._service.min(dataset, 0, dataset.length - 1)];
-        let max: DataType = dataset[this._service.max(dataset, 0, dataset.length - 1)];
-        let buckets: number[] = Array.from({length: max.value - min.value + 1}).map(() => 0);
-        let index: number = 0, count: number = 0;
+        let count: number = 0, gap: number = dataset.length, swapped: boolean = true;
 
-        for (let i = 0; i < dataset.length; i++) {
-            count += 1;
-            buckets[dataset[i].value - min.value]++;
-            callback({dataset, pivotIndex: i, auxCount: count});
-            await sleep(speed);
-        }
+        while (gap > 1 || swapped) {
+            gap = Math.floor(gap / 1.3);
+            gap = gap < 1 ? 1 : gap;
+            swapped = false;
 
-        if (order === 'ascent') {
-            for (let i = 0; i < buckets.length; i++) {
-                index = await DemoStableSortService.countBack(dataset, min, buckets, i, index, count, speed,
-                    value => {
-                        count = value.auxCount as number;
-                        callback({...value, auxCount: count});
-                    });
+            for (let i = 0; i + gap < dataset.length; i++) {
+                if (order === 'ascent' && dataset[i].value > dataset[i + gap].value) {
+                    count += 1;
+                    this._service.swap(dataset, i, i + gap);
+                    callback({dataset, currIndex: i, nextIndex: i + gap, swapCount: count});
+                    swapped = true;
+                } else if (order === 'descent' && dataset[i].value < dataset[i + gap].value) {
+                    count += 1;
+                    this._service.swap(dataset, i, i + gap);
+                    callback({dataset, currIndex: i, nextIndex: i + gap, swapCount: count});
+                    swapped = true;
+                } else {
+                    callback({dataset, currIndex: i, swapCount: count});
+                }
+
+                await sleep(speed);
             }
         }
 
-        if (order === 'descent') {
-            for (let i = buckets.length - 1; i >= 0; i--) {
-                index = await DemoStableSortService.countBack(dataset, min, buckets, i, index, count, speed,
-                    value => {
-                        count = value.auxCount as number;
-                        callback({...value, auxCount: count});
-                    });
-            }
-        }
-
-        buckets.length = 0;
-        callback({dataset, auxCount: count});
+        callback({dataset, swapCount: count});
     }
 
     /**
      *
      * @param dataset
-     * @param min
-     * @param buckets
-     * @param i
+     * @param speed
+     * @param order
+     * @param callback
+     */
+    public async sortByCycle(dataset: DataType[], speed: SpeedType, order: OrderType,
+                             callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let pivot: number, point: number, count: number = 0;
+
+        for (let start = 0; start + 1 < dataset.length; start++) {
+            pivot = start;
+            point = start;
+
+            for (let i = start + 1; i < dataset.length; i++) {
+                if (order === 'ascent' && dataset[i].value < dataset[start].value) {
+                    point++;
+                }
+
+                if (order === 'descent' && dataset[i].value > dataset[start].value) {
+                    point++;
+                }
+
+                callback({dataset, pivotIndex: start, currIndex: i, swapCount: count});
+                await sleep(speed);
+            }
+
+            if (point === start) continue;
+
+            while (dataset[point].value === dataset[start].value) {
+                pivot++;
+            }
+
+            count += 1;
+            this._service.swap(dataset, point, pivot);
+            callback({dataset, pivotIndex: start, currIndex: point, nextIndex: pivot, swapCount: count});
+            await this.cycleSeek(dataset, start, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+        }
+
+        callback({dataset, swapCount: count});
+    }
+
+    /**
+     *
+     * @param dataset
      * @param index
      * @param count
      * @param speed
+     * @param order
      * @param callback
      * @private
      */
-    private static async countBack(dataset: DataType[], min: DataType, buckets: number[], i: number, index: number,
-                                   count: number, speed: SpeedType,
-                                   callback: (_value: SortReturnMeta) => void): Promise<number> {
-        while (buckets[i] > 0) {
-            count += 1;
-            dataset[index] = {value: i + min.value, ratio: (i + min.value) / dataset.length};
-            callback({dataset, pivotIndex: index, auxCount: count});
-            buckets[i]--;
-            index++;
-            await sleep(speed);
-        }
+    private async cycleSeek(dataset: DataType[], index: number, count: number, speed: SpeedType, order: OrderType,
+                            callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let pivot: number, point: number = -1;
 
-        return index;
+        while (point !== index) {
+            pivot = index;
+            point = index;
+
+            for (let i = index + 1; i < dataset.length; i++) {
+                if (order === 'ascent' && dataset[i].value < dataset[index].value) {
+                    point++;
+                }
+
+                if (order === 'descent' && dataset[i].value > dataset[index].value) {
+                    point++;
+                }
+
+                callback({dataset, pivotIndex: index, currIndex: i, swapCount: count});
+                await sleep(speed);
+            }
+
+            if (point === index) break;
+
+            while (dataset[point].value === dataset[index].value) {
+                pivot++;
+            }
+
+            count += 1;
+            this._service.swap(dataset, point, pivot);
+            callback({dataset, pivotIndex: index, currIndex: point, nextIndex: pivot, swapCount: count});
+        }
     }
 
     /**
@@ -1608,6 +1529,86 @@ export class DemoStableSortService {
         }
 
         callback({dataset, swapCount: count});
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param count
+     * @param speed
+     * @param order
+     * @param callback
+     */
+    public async sortByHeap(dataset: DataType[], count: number, speed: SpeedType, order: OrderType,
+                            callback: (_value: SortReturnMeta) => void): Promise<void> {
+        for (let i = Math.floor(dataset.length * 0.5 - 1); i >= 0; i--) {
+            await this.heapify(dataset, i, dataset.length, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+        }
+
+        for (let i = dataset.length - 1; i >= 0; i--) {
+            count += 1;
+            this._service.swap(dataset, i, 0);
+            callback({dataset, currIndex: i, nextIndex: 0, swapCount: count});
+            await this.heapify(dataset, 0, i, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+        }
+
+        await callback({dataset, swapCount: count});
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param pivot
+     * @param size
+     * @param count
+     * @param speed
+     * @param order
+     * @param callback
+     * @private
+     */
+    private async heapify(dataset: DataType[], pivot: number, size: number, count: number,
+                          speed: SpeedType, order: OrderType,
+                          callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let lhs: number = pivot + pivot + 1;
+        let rhs: number = pivot + pivot + 2;
+        let point: number = pivot;
+
+        if (order === 'ascent') {
+            if (lhs < size && dataset[lhs].value > dataset[pivot].value) {
+                point = lhs;
+            }
+
+            if (rhs < size && dataset[rhs].value > dataset[point].value) {
+                point = rhs;
+            }
+        }
+
+        if (order === 'descent') {
+            if (lhs < size && dataset[lhs].value < dataset[pivot].value) {
+                point = lhs;
+            }
+
+            if (rhs < size && dataset[rhs].value < dataset[point].value) {
+                point = rhs;
+            }
+        }
+
+        if (point !== pivot) {
+            count += 1;
+            this._service.swap(dataset, pivot, point);
+            callback({dataset, currIndex: pivot, nextIndex: point, swapCount: count});
+            await this.heapify(dataset, point, size, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+            await sleep(speed);
+        }
     }
 
     /**
@@ -1679,72 +1680,65 @@ export class DemoStableSortService {
         await callback({dataset, swapCount: count});
     }
 
-    public async sortByLibrary(dataset: DataType[], speed: SpeedType, order: OrderType,
-                               callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let array: DataType[] = Array.from({length: dataset.length * 2})
-            .map((_, index) => index % 2 === 0
-                ? ({value: dataset[index >> 1].value, ratio: dataset[index >> 1].ratio})
-                : ({value: Number.POSITIVE_INFINITY, ratio: Number.POSITIVE_INFINITY}));
-        let swapCount: number = 0, auxCount: number = 0, index: number = 1, idx: number, i: number, j: number;
-        // console.log(array, JSON.stringify(array));
-        while (index < dataset.length) {
-            i = index * 2;
-            j = this.libraryBS(array, 0, i - 2, dataset[index], order);
-            console.log('+++', JSON.stringify(array), `i: ${i}`, `j: ${j}`, `j + 1: ${j + 1}`);
-            if (array[j + 1].value === Number.POSITIVE_INFINITY) {
-                let temp: DataType = array[j + 1];
-                array[j + 1] = array[j];
-                array[j] = array[i];
-                array[i] = temp;
-                swapCount += 1;
-                callback({dataset, pivotIndex: index, swapCount, auxCount});
-                index++;
-            } else {
-                idx = 0;
-
-                for (let k = 0; k < array.length; k++) {
-                    if (array[k].value !== Number.POSITIVE_INFINITY) {
-                        auxCount += 1;
-                        dataset[idx++] = array[k] as DataType;
-                        callback({dataset, pivotIndex: idx, swapCount, auxCount});
-                    }
-
-                    await sleep(speed);
-                }
-
-                array = this.libraryRebalance(array, 0, i);
-            }
-            console.log('---', JSON.stringify(array), `i: ${i}`, `j: ${j}`, `j + 1: ${j + 1}`);
-            await sleep(speed);
-        }
-
-        callback({dataset, swapCount, auxCount});
+    /**
+     *
+     * @param dataset
+     * @param speed
+     * @param order
+     * @param callback
+     */
+    public async sortByIntro(dataset: DataType[], speed: SpeedType, order: OrderType,
+                             callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let limit: number = 2 * Math.floor(Math.log2(dataset.length)), count: number = 0;
+        await this.introTask(dataset, 0, dataset.length - 1, limit, count, speed, order, value => {
+            count = value.swapCount as number;
+            callback({...value, swapCount: count});
+        });
+        callback({dataset, swapCount: count});
     }
 
-    public libraryBS(dataset: DataType[], lhs: number, rhs: number, data: DataType,
-                     order: OrderType): number {
-
-        if (lhs <= rhs) {
-            let mid: number = Math.floor((rhs - lhs) * 0.5 + lhs);
-
-            if (data.value < dataset[mid].value) {
-                return this.libraryBS(dataset, lhs, mid - 1, data, order);
-            } else if (data.value > dataset[mid].value) {
-                return this.libraryBS(dataset, mid + 1, rhs, data, order);
-            } else {
-                return mid;
+    /**
+     *
+     * @param dataset
+     * @param lhs
+     * @param rhs
+     * @param limit
+     * @param count
+     * @param speed
+     * @param order
+     * @param callback
+     * @private
+     */
+    private async introTask(dataset: DataType[], lhs: number, rhs: number, limit: number, count: number,
+                            speed: SpeedType, order: OrderType,
+                            callback: (_value: SortReturnMeta) => void): Promise<void> {
+        if (rhs - lhs < 16) {
+            await this.sortByInsertion(dataset, lhs, rhs, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+        } else {
+            if (limit === 0) {
+                // await this.sortByHeap(dataset, count, speed, order, value => {
+                //     count = value.swapCount as number;
+                //     callback({...value, swapCount: count});
+                // });
+                return;
             }
+
+            let mid: number = await this.partition(dataset, lhs, rhs, rhs, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+            await this.introTask(dataset, lhs, mid - 1, limit - 1, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+            await this.introTask(dataset, mid + 1, rhs, limit - 1, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
         }
-
-        return lhs;
-    }
-
-    private libraryRebalance(array: DataType[], lhs: number, rhs: number): DataType[] {
-        for (let i = rhs; i >= lhs; i--) {
-            this._service.swap(array, j, i);
-        }
-
-        return array;
     }
 
     /**
@@ -1891,7 +1885,7 @@ export class DemoStableSortService {
                 count = value.swapCount as number;
                 callback({...value, swapCount: count});
             });
-            await DemoStableSortService.mergeInPlace(dataset, lhs, mid, rhs, count, speed, order, value => {
+            await DemoComparisonSortService.mergeInPlace(dataset, lhs, mid, rhs, count, speed, order, value => {
                 count = value.swapCount as number;
                 callback({...value, swapCount: count});
             });
@@ -1987,176 +1981,212 @@ export class DemoStableSortService {
         await callback({dataset, swapCount: count});
     }
 
-    public async sortByPigeonHole(dataset: DataType[], speed: SpeedType, order: OrderType,
-                                  callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let holes: number[] = Array.from({length: dataset.length}).map(() => 0), index: number = 0;
+    /**
+     *
+     * @param dataset
+     * @param lhs
+     * @param rhs
+     * @param count
+     * @param speed
+     * @param order
+     * @param callback
+     */
+    public async sortByQuick(dataset: DataType[], lhs: number, rhs: number, count: number,
+                             speed: SpeedType, order: OrderType,
+                             callback: (_value: SortReturnMeta) => void): Promise<void> {
+        if (lhs < rhs) {
+            let mid: number = await this.partition(dataset, lhs, rhs, rhs, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+            await this.sortByQuick(dataset, lhs, mid - 1, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+            await this.sortByQuick(dataset, mid + 1, rhs, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+        }
 
-        for (let i = 0; i < dataset.length; i++) {
-            holes[dataset[i].value - 1] += 1;
-            callback({dataset, pivotIndex: i});
+        await callback({dataset, swapCount: count});
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param lhs
+     * @param rhs
+     * @param pnt
+     * @param count
+     * @param speed
+     * @param order
+     * @param callback
+     * @private
+     */
+    private async partition(dataset: DataType[], lhs: number, rhs: number, pnt: number, count: number,
+                            speed: SpeedType, order: OrderType,
+                            callback: (_value: SortReturnMeta) => void): Promise<number> {
+        let pivot: DataType = dataset[pnt], i: number = lhs - 1;
+
+        for (let j = lhs; j <= rhs - 1; j++) {
+            if (order === 'ascent' && dataset[j].value <= pivot.value) {
+                i += 1;
+                count += 1;
+                this._service.swap(dataset, i, j);
+                callback({dataset, pivotIndex: rhs, currIndex: j, nextIndex: i, swapCount: count});
+            } else if (order === 'descent' && dataset[j].value >= pivot.value) {
+                i += 1;
+                count += 1;
+                this._service.swap(dataset, i, j);
+                callback({dataset, pivotIndex: rhs, currIndex: j, nextIndex: i, swapCount: count});
+            } else {
+                await callback({dataset, pivotIndex: rhs, currIndex: j, swapCount: count});
+            }
+
             await sleep(speed);
         }
 
-        if (order === 'ascent') {
-            for (let i = 0; i < holes.length; i++) {
-                index = await DemoStableSortService.holeBack(dataset, holes, i, index, speed, callback);
-            }
-        }
-
-        if (order === 'descent') {
-            for (let i = dataset.length - 1; i >= 0; i--) {
-                index = await DemoStableSortService.holeBack(dataset, holes, i, index, speed, callback);
-            }
-        }
-
-        holes.length = 0;
-        callback({dataset});
+        count += 1;
+        this._service.swap(dataset, i + 1, rhs);
+        callback({dataset, pivotIndex: rhs, currIndex: rhs, nextIndex: i + 1, swapCount: count});
+        return i + 1;
     }
 
-    private static async holeBack(dataset: DataType[], holes: number[], i: number, index: number, speed: SpeedType,
+    /**
+     *
+     * @param dataset
+     * @param lhs
+     * @param rhs
+     * @param count
+     * @param speed
+     * @param order
+     * @param callback
+     */
+    public async sortByQuick2Way(dataset: DataType[], lhs: number, rhs: number, count: number,
+                                 speed: SpeedType, order: OrderType,
+                                 callback: (_value: SortReturnMeta) => void): Promise<void> {
+        if (lhs < rhs) {
+            let mid: number = await this.partitionBy2Way(dataset, lhs, rhs, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+            await this.sortByQuick2Way(dataset, lhs, mid - 1, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+            await this.sortByQuick2Way(dataset, mid + 1, rhs, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+        }
+
+        await callback({dataset, swapCount: count});
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param lhs
+     * @param rhs
+     * @param count
+     * @param speed
+     * @param order
+     * @param callback
+     * @private
+     */
+    private async partitionBy2Way(dataset: DataType[], lhs: number, rhs: number, count: number,
+                                  speed: SpeedType, order: OrderType,
                                   callback: (_value: SortReturnMeta) => void): Promise<number> {
-        if (holes[i] > 0) {
-            for (let j = 0; j < holes[i]; j++) {
-                dataset[index] = {value: i + 1, ratio: (i + 1) / dataset.length};
-                callback({dataset, pivotIndex: index});
-                index++;
-                await sleep(speed);
+        let pivot: DataType = dataset[lhs], i: number = lhs + 1, j: number = rhs;
+
+        while (i <= j) {
+            if (order === 'ascent' && dataset[i].value < pivot.value) {
+                i++;
+                callback({dataset, pivotIndex: lhs, currIndex: i, swapCount: count});
+            } else if (order === 'ascent' && dataset[j].value > pivot.value) {
+                j--;
+                callback({dataset, pivotIndex: lhs, nextIndex: j, swapCount: count});
+            } else if (order === 'descent' && dataset[i].value > pivot.value) {
+                i++;
+                callback({dataset, pivotIndex: lhs, currIndex: i, swapCount: count});
+            } else if (order === 'descent' && dataset[j].value < pivot.value) {
+                j--;
+                callback({dataset, pivotIndex: lhs, nextIndex: j, swapCount: count});
+            } else {
+                count += 1;
+                this._service.swap(dataset, i, j);
+                callback({dataset, pivotIndex: lhs, currIndex: i, nextIndex: j, swapCount: count});
+                i++;
+                j--;
             }
+
+            await sleep(speed);
         }
 
-        return index;
+        count += 1;
+        this._service.swap(dataset, j, lhs);
+        callback({dataset, currIndex: j, nextIndex: lhs, swapCount: count});
+        return j;
     }
 
     /**
      *
      * @param dataset
+     * @param lhs
+     * @param rhs
+     * @param count
      * @param speed
      * @param order
      * @param callback
      */
-    public async sortByRadixLSD(dataset: DataType[], speed: SpeedType, order: OrderType,
-                                callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let index: number = this._service.max(dataset, 0, dataset.length - 1), count: number = 0;
-        let digits: number = this._service.calcDigits(dataset[index]);
+    public async sortByQuick3Way(dataset: DataType[], lhs: number, rhs: number, count: number,
+                                 speed: SpeedType, order: OrderType,
+                                 callback: (_value: SortReturnMeta) => void): Promise<void> {
+        if (lhs < rhs) {
+            let pivot: DataType = dataset[lhs], lt: number = lhs, gt: number = rhs, i: number = lhs + 1;
 
-        for (let digit = 1; digit <= digits; digit++) {
-            for (let i = 0; i < dataset.length; i++) {
-                count += 1;
-                dataset[i].digit = this._service.calcDigit(dataset[i], digit);
-                callback({dataset, pivotIndex: i, auxCount: count});
-                await sleep(speed);
-            }
-
-            await this.radixMergeSort(dataset, 0, dataset.length - 1, count, speed, order, value => {
-                count = value.auxCount as number;
-                callback({...value, auxCount: count});
-            });
-        }
-
-        callback({dataset, auxCount: count});
-    }
-
-    /**
-     *
-     * @param dataset
-     * @param base
-     * @param speed
-     * @param order
-     * @param callback
-     */
-    public async sortByRadixBaseLSD(dataset: DataType[], base: 2 | 4 | 8 | 16, speed: SpeedType, order: OrderType,
-                                callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let index: number = this._service.max(dataset, 0, dataset.length - 1), count: number = 0;
-        let digits: number = dataset[index].value.toString(base).length, value: string;
-
-        for (let digit = 1; digit <= digits; digit++) {
-            for (let i = 0; i < dataset.length; i++) {
-                count += 1;
-                value = dataset[i].value.toString(base);
-                value = '0'.repeat(digits - value.length) + value;
-                dataset[i].digit = Number.parseInt(value[digits - digit], base);
-                callback({dataset, pivotIndex: i, auxCount: count});
-                await sleep(speed);
-            }
-
-            await this.radixMergeSort(dataset, 0, dataset.length - 1, count, speed, order, value => {
-                count = value.auxCount as number;
-                callback({...value, auxCount: count});
-            });
-        }
-
-        callback({dataset, auxCount: count});
-    }
-
-    public async sortByRadixMSD(dataset: DataType[], speed: SpeedType, order: OrderType,
-                                callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let buckets: DataType[][] = Array.from({length: 10}).map(() => []);
-        let index: number = this._service.max(dataset, 0, dataset.length - 1);
-        let digits: number = this._service.calcDigits(dataset[index]);
-        await this.radixMSD(dataset, buckets, digits, 0, dataset.length - 1, speed, order, callback);
-        buckets.forEach(bucket => bucket.length = 0);
-        buckets.length = 0;
-        callback({dataset});
-    }
-
-    private async radixMSD(dataset: DataType[], buckets: DataType[][], digit: number, lhs: number, rhs: number,
-                           speed: SpeedType, order: OrderType,
-                           callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let ranges: RangeType[], bit: number;
-
-        for (let i = lhs; i <= rhs; i++) {
-            bit = this._service.calcDigit(dataset[i], digit);
-            dataset[i].digit = bit;
-
-            if (order === 'ascent') {
-                buckets[bit].push(dataset[i]);
-            }
-
-            if (order === 'descent') {
-                buckets[9 - bit].push(dataset[i]);
-            }
-        }
-
-        if (rhs - lhs <= 16) {
-            await this.radixInsertSort(dataset, lhs, rhs, speed, order, callback);
-        } else {
-            await this.radixMergeSort(dataset, lhs, rhs, 0, speed, order, callback);
-        }
-
-        ranges = await DemoStableSortService.radixRange(buckets, lhs, rhs);
-        buckets.forEach(bucket => bucket.length = 0);
-
-        if (digit > 1) {
-            for (let i = 0; i < ranges.length; i++) {
-                await this.radixMSD(dataset, buckets, digit - 1, ranges[i].lhs, ranges[i].rhs, speed, order, callback);
-            }
-        }
-    }
-
-    private async radixInsertSort(dataset: DataType[], lhs: number, rhs: number, speed: SpeedType, order: OrderType,
-                                  callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let fst: number, snd: number;
-
-        for (let i = lhs; i <= rhs; i++) {
-            for (let j = i; j > lhs; j--) {
-                fst = dataset[j - 1].digit as number;
-                snd = dataset[j].digit as number;
-
-                if (order === 'ascent' && fst > snd) {
-                    this._service.swap(dataset, j, j - 1);
-                    callback({dataset, pivotIndex: i, currIndex: j, nextIndex: j - 1});
-                } else if (order === 'descent' && fst < snd) {
-                    this._service.swap(dataset, j, j - 1);
-                    callback({dataset, pivotIndex: i, currIndex: j, nextIndex: j - 1});
+            while (i <= gt) {
+                if (order === 'ascent' && dataset[i].value < pivot.value) {
+                    count += 1;
+                    this._service.swap(dataset, lt, i);
+                    callback({dataset, pivotIndex: lhs, currIndex: lt, nextIndex: i, swapCount: count});
+                    i++;
+                    lt++;
+                } else if (order === 'ascent' && dataset[i].value > pivot.value) {
+                    count += 1;
+                    this._service.swap(dataset, gt, i);
+                    callback({dataset, pivotIndex: lhs, currIndex: gt, nextIndex: i, swapCount: count});
+                    gt--;
+                } else if (order === 'descent' && dataset[i].value > pivot.value) {
+                    count += 1;
+                    this._service.swap(dataset, lt, i);
+                    callback({dataset, pivotIndex: lhs, currIndex: lt, nextIndex: i, swapCount: count});
+                    i++;
+                    lt++;
+                } else if (order === 'descent' && dataset[i].value < pivot.value) {
+                    count += 1;
+                    this._service.swap(dataset, gt, i);
+                    callback({dataset, pivotIndex: lhs, currIndex: gt, nextIndex: i, swapCount: count});
+                    gt--;
                 } else {
-                    await callback({dataset, pivotIndex: i, currIndex: j});
+                    i++;
                 }
 
                 await sleep(speed);
             }
+
+            await this.sortByQuick3Way(dataset, lhs, lt - 1, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+            await this.sortByQuick3Way(dataset, gt + 1, rhs, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
         }
 
-        await callback({dataset});
+        callback({dataset, swapCount: count});
     }
 
     /**
@@ -2168,35 +2198,36 @@ export class DemoStableSortService {
      * @param speed
      * @param order
      * @param callback
-     * @private
      */
-    private async radixMergeSort(dataset: DataType[], lhs: number, rhs: number, count: number,
-                                 speed: SpeedType, order: OrderType,
-                                 callback: (_value: SortReturnMeta) => void): Promise<void> {
+    public async sortByQuickDualPivot(dataset: DataType[], lhs: number, rhs: number, count: number,
+                                      speed: SpeedType, order: OrderType,
+                                      callback: (_value: SortReturnMeta) => void): Promise<void> {
         if (lhs < rhs) {
-            let mid: number = Math.floor((rhs - lhs) * 0.5 + lhs);
-            await this.radixMergeSort(dataset, lhs, mid, count, speed, order, value => {
-                count = value.auxCount as number;
-                callback({...value, auxCount: count});
+            let pivots: DualPivotType = await this.partitionDualPivot(dataset, lhs, rhs, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
             });
-            await this.radixMergeSort(dataset, mid + 1, rhs, count, speed, order, value => {
-                count = value.auxCount as number;
-                callback({...value, auxCount: count});
+            await this.sortByQuickDualPivot(dataset, lhs, pivots.fst - 1, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
             });
-            await DemoStableSortService.radixMerge(dataset, lhs, mid, rhs, count, speed, order, value => {
-                count = value.auxCount as number;
-                callback({...value, auxCount: count});
+            await this.sortByQuickDualPivot(dataset, pivots.fst + 1, pivots.snd - 1, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+            await this.sortByQuickDualPivot(dataset, pivots.snd + 1, rhs, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
             });
         }
 
-        callback({dataset, auxCount: count});
+        callback({dataset, swapCount: count});
     }
 
     /**
      *
      * @param dataset
      * @param lhs
-     * @param mid
      * @param rhs
      * @param count
      * @param speed
@@ -2204,71 +2235,262 @@ export class DemoStableSortService {
      * @param callback
      * @private
      */
-    private static async radixMerge(dataset: DataType[], lhs: number, mid: number, rhs: number, count: number,
-                                    speed: SpeedType, order: OrderType,
-                                    callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let i: number = 0, j: number = 0, k: number = lhs, fst: number, snd: number;
-        let lhsLength: number = mid - lhs + 1, rhsLength: number = rhs - mid;
-        let lhsArray: DataType[] = new Array(lhsLength), rhsArray: DataType[] = new Array(rhsLength);
-
-        for (let x = 0; x < lhsLength; x++) {
-            count += 1;
-            lhsArray[x] = dataset[lhs + x];
-            callback({dataset, pivotIndex: x, auxCount: count});
+    private async partitionDualPivot(dataset: DataType[], lhs: number, rhs: number, count: number,
+                                     speed: SpeedType, order: OrderType,
+                                     callback: (_value: SortReturnMeta) => void): Promise<DualPivotType> {
+        if (order === 'ascent' && dataset[lhs].value > dataset[rhs].value) {
+            count += 1
+            this._service.swap(dataset, lhs, rhs);
+            callback({dataset, currIndex: lhs, nextIndex: rhs, swapCount: count});
             await sleep(speed);
         }
 
-        for (let x = 0; x < rhsLength; x++) {
+        if (order === 'descent' && dataset[lhs].value < dataset[rhs].value) {
             count += 1;
-            rhsArray[x] = dataset[mid + 1 + x];
-            callback({dataset, pivotIndex: mid + 1 + x, auxCount: count});
+            this._service.swap(dataset, lhs, rhs);
+            callback({dataset, currIndex: lhs, nextIndex: rhs, swapCount: count});
             await sleep(speed);
         }
 
-        while (i < lhsLength && j < rhsLength) {
-            fst = lhsArray[i].digit as number;
-            snd = rhsArray[j].digit as number;
+        let lhsIndex: number = lhs + 1, rhsIndex: number = rhs - 1, midIndex: number = lhs + 1;
+        let fst: DataType = dataset[lhs], snd: DataType = dataset[rhs];
 
-            if (order === 'ascent' && fst <= snd) {
-                dataset[k] = lhsArray[i++];
-            } else if (order === 'descent' && fst >= snd) {
-                dataset[k] = lhsArray[i++];
-            } else {
-                dataset[k] = rhsArray[j++];
+        while (midIndex <= rhsIndex) {
+            if (order === 'ascent' && dataset[midIndex].value < fst.value) {
+                count += 1;
+                this._service.swap(dataset, midIndex, lhsIndex);
+                callback({
+                    dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: midIndex,
+                    nextIndex: lhsIndex, swapCount: count
+                });
+                lhsIndex++;
             }
 
-            count += 1;
-            await callback({dataset, pivotIndex: k++, currIndex: i + lhs, nextIndex: j + mid, auxCount: count});
+            if (order === 'descent' && dataset[midIndex].value > fst.value) {
+                count += 1;
+                this._service.swap(dataset, midIndex, lhsIndex);
+                callback({
+                    dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: midIndex,
+                    nextIndex: lhsIndex, swapCount: count
+                });
+                lhsIndex++;
+            }
+
+            if (order === 'ascent' && dataset[midIndex].value > snd.value) {
+                while (midIndex < rhsIndex && dataset[rhsIndex].value > snd.value) {
+                    rhsIndex--;
+                }
+
+                count += 1;
+                this._service.swap(dataset, midIndex, rhsIndex);
+                callback({
+                    dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: midIndex,
+                    nextIndex: rhsIndex, swapCount: count
+                });
+                await sleep(speed);
+
+                if (dataset[midIndex].value < fst.value) {
+                    count += 1;
+                    this._service.swap(dataset, midIndex, lhsIndex);
+                    callback({
+                        dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: midIndex,
+                        nextIndex: lhsIndex, swapCount: count
+                    });
+                    lhsIndex++;
+                }
+
+                rhsIndex--;
+            }
+
+            if (order === 'descent' && dataset[midIndex].value < snd.value) {
+                while (midIndex < rhsIndex && dataset[rhsIndex].value < snd.value) {
+                    rhsIndex--;
+                }
+
+                count += 1;
+                this._service.swap(dataset, midIndex, rhsIndex);
+                callback({
+                    dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: midIndex,
+                    nextIndex: rhsIndex, swapCount: count
+                });
+                await sleep(speed);
+
+                if (dataset[midIndex].value > fst.value) {
+                    count += 1;
+                    this._service.swap(dataset, midIndex, lhsIndex);
+                    callback({
+                        dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: midIndex,
+                        nextIndex: lhsIndex, swapCount: count
+                    });
+                    lhsIndex++;
+                }
+
+                rhsIndex--;
+            }
+
+            midIndex++;
             await sleep(speed);
         }
 
-        while (i < lhsLength) {
-            count += 1;
-            dataset[k++] = lhsArray[i++];
-            await callback({dataset, pivotIndex: k, currIndex: i + lhs, nextIndex: j + mid, auxCount: count});
-            await sleep(speed);
-        }
+        lhsIndex--;
+        rhsIndex++;
 
-        while (j < rhsLength) {
-            count += 1;
-            dataset[k++] = rhsArray[j++];
-            await callback({dataset, pivotIndex: k, currIndex: i + lhs, nextIndex: j + mid, auxCount: count});
-            await sleep(speed);
-        }
+        count += 1;
+        this._service.swap(dataset, lhsIndex, lhs);
+        callback({
+            dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: lhsIndex,
+            nextIndex: lhs, swapCount: count
+        });
+        await sleep(speed);
+
+        count += 1
+        this._service.swap(dataset, rhsIndex, rhs);
+        callback({
+            dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: rhsIndex,
+            nextIndex: rhs, swapCount: count
+        });
+        return {fst: lhsIndex, snd: rhsIndex};
     }
 
-    private static async radixRange(buckets: DataType[][], lhs: number, rhs: number): Promise<RangeType[]> {
-        let ranges: RangeType[] = [], start: number = lhs, end: number;
+    /**
+     *
+     * @param dataset
+     * @param speed
+     * @param order
+     * @param callback
+     */
+    public async sortBySelection(dataset: DataType[], speed: SpeedType, order: OrderType,
+                                 callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let count: number = 0;
 
-        for (let i = 0; i < buckets.length; i++) {
-            if (buckets[i].length > 0) {
-                end = Math.min(start + buckets[i].length - 1, rhs);
-                ranges.push({lhs: start, rhs: end});
-                start = end + 1;
+        for (let i = 0; i < dataset.length - 1; i++) {
+            let k: number = i;
+
+            for (let j = i + 1; j < dataset.length; j++) {
+                if (order === 'ascent' && dataset[j].value < dataset[k].value) {
+                    k = j;
+                }
+
+                if (order === 'descent' && dataset[j].value > dataset[k].value) {
+                    k = j;
+                }
+
+                callback({dataset, pivotIndex: i, currIndex: j, nextIndex: k, swapCount: count});
+                await sleep(speed);
+            }
+
+            count += 1;
+            this._service.swap(dataset, i, k);
+            await callback({dataset, pivotIndex: i, currIndex: i, nextIndex: k, swapCount: count});
+            await sleep(speed);
+        }
+
+        await callback({dataset, swapCount: count});
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param speed
+     * @param order
+     * @param callback
+     */
+    public async sortBySelectionDouble(dataset: DataType[], speed: SpeedType, order: OrderType,
+                                       callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let lhs: number = 0, rhs: number = dataset.length - 1, p: number, q: number, count: number = 0;
+
+        while (lhs <= rhs) {
+            p = lhs;
+            q = rhs;
+
+            if (order === 'ascent' && dataset[p].value > dataset[q].value) {
+                count += 1;
+                this._service.swap(dataset, p, q);
+                callback({dataset, lhsPivotIndex: p, rhsPivotIndex: p, swapCount: count});
+                await sleep(speed);
+            }
+
+            if (order === 'descent' && dataset[p].value < dataset[q].value) {
+                count += 1;
+                this._service.swap(dataset, p, q);
+                callback({dataset, lhsPivotIndex: p, rhsPivotIndex: p, swapCount: count});
+                await sleep(speed);
+            }
+
+            for (let i = lhs + 1, j = rhs - 1; i <= rhs && j >= lhs; i++, j--) {
+                if (order === 'ascent') {
+                    if (dataset[i].value < dataset[p].value) {
+                        p = i;
+                    }
+
+                    if (dataset[j].value > dataset[q].value) {
+                        q = j;
+                    }
+                }
+
+                if (order === 'descent') {
+                    if (dataset[i].value > dataset[p].value) {
+                        p = i;
+                    }
+
+                    if (dataset[j].value < dataset[q].value) {
+                        q = j;
+                    }
+                }
+
+                callback({
+                    dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, lhsCurrIndex: i, lhsNextIndex: p,
+                    rhsCurrIndex: j, rhsNextIndex: q, swapCount: count
+                });
+                await sleep(speed);
+            }
+
+            count += 2;
+            this._service.swap(dataset, lhs, p);
+            this._service.swap(dataset, rhs, q);
+            callback({
+                dataset, lhsCurrIndex: lhs, lhsNextIndex: p, rhsCurrIndex: rhs, rhsNextIndex: q,
+                swapCount: count
+            });
+            lhs++;
+            rhs--;
+        }
+
+        callback({dataset, swapCount: count});
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param speed
+     * @param order
+     * @param callback
+     */
+    public async sortByShell(dataset: DataType[], speed: SpeedType, order: OrderType,
+                             callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let count: number = 0;
+
+        for (let gap = Math.ceil(dataset.length * 0.5); gap > 0; gap = Math.floor(gap * 0.5)) {
+            for (let i = gap; i < dataset.length; i++) {
+                for (let j = i; j >= gap; j -= gap) {
+                    if (order === 'ascent' && dataset[j].value < dataset[j - gap].value) {
+                        count += 1;
+                        this._service.swap(dataset, j, j - gap);
+                        callback({dataset, pivotIndex: i, currIndex: j, nextIndex: j - gap, swapCount: count});
+                    } else if (order === 'descent' && dataset[j].value > dataset[j - gap].value) {
+                        count += 1;
+                        this._service.swap(dataset, j, j - gap);
+                        callback({dataset, pivotIndex: i, currIndex: j, nextIndex: j - gap, swapCount: count});
+                    } else {
+                        callback({dataset, pivotIndex: i, currIndex: j, swapCount: count});
+                    }
+
+                    await sleep(speed);
+                }
             }
         }
 
-        return ranges;
+        await callback({dataset, swapCount: count});
     }
 
     /**
@@ -2355,7 +2577,7 @@ export class DemoStableSortService {
      * @param order
      * @private
      */
-    private strandMerge(sublist: DataType[], output: DataType[], order: OrderType): {array: DataType[], count: number} {
+    private strandMerge(sublist: DataType[], output: DataType[], order: OrderType): { array: DataType[], count: number } {
         let array: DataType[] = [], index: number = -1, count: number = 0;
 
         while (sublist.length > 0 && output.length > 0) {
@@ -2499,14 +2721,43 @@ export class DemoStableSortService {
         return length + append;
     }
 
+    /**
+     *
+     * @param dataset
+     * @param speed
+     * @param order
+     * @param callback
+     */
+    public async sortByTournament(dataset: DataType[], speed: SpeedType, order: OrderType,
+                                  callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let j: number = -1, count: number = 0;
+
+        for (let i = 0; i < dataset.length - 1; i++) {
+            if (order === 'ascent') {
+                j = this._service.min(dataset, i, dataset.length - 1);
+            }
+
+            if (order === 'descent') {
+                j = this._service.max(dataset, i, dataset.length - 1);
+            }
+
+            count += 1;
+            this._service.swap(dataset, i, j);
+            callback({dataset, currIndex: i, nextIndex: j, swapCount: count});
+            await sleep(speed);
+        }
+
+        await callback({dataset, swapCount: count});
+    }
+
 }
 
 @Injectable()
-export class DemoUnstableSortService {
+export class DemoDistributionSortService {
 
     constructor(
         private _dsus: DemoSortUtilityService,
-        private _dsss: DemoStableSortService
+        private _dcss: DemoComparisonSortService
     ) {
     }
 
@@ -2517,35 +2768,140 @@ export class DemoUnstableSortService {
      * @param order
      * @param callback
      */
-    public async sortByCombo(dataset: DataType[], speed: SpeedType, order: OrderType,
-                             callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let count: number = 0, gap: number = dataset.length, swapped: boolean = true;
+    public async sortByBST(dataset: DataType[], speed: SpeedType, order: OrderType,
+                           callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let list: DataType[], tree: BSTNode | null = null, count: number = 0;
 
-        while (gap > 1 || swapped) {
-            gap = Math.floor(gap / 1.3);
-            gap = gap < 1 ? 1 : gap;
-            swapped = false;
+        for (let i = 0; i < dataset.length; i++) {
+            count += 1;
+            tree = this.insertOfBST(tree, dataset[i], order);
+            callback({dataset, pivotIndex: i, auxCount: count});
+            await sleep(speed);
+        }
 
-            for (let i = 0; i + gap < dataset.length; i++) {
-                if (order === 'ascent' && dataset[i].value > dataset[i + gap].value) {
-                    count += 1;
-                    this._dsus.swap(dataset, i, i + gap);
-                    callback({dataset, currIndex: i, nextIndex: i + gap, swapCount: count});
-                    swapped = true;
-                } else if (order === 'descent' && dataset[i].value < dataset[i + gap].value) {
-                    count += 1;
-                    this._dsus.swap(dataset, i, i + gap);
-                    callback({dataset, currIndex: i, nextIndex: i + gap, swapCount: count});
-                    swapped = true;
-                } else {
-                    callback({dataset, currIndex: i, swapCount: count});
-                }
+        list = this.traverseOfBST(tree, []);
 
+        for (let i = 0; i < list.length; i++) {
+            count += 1;
+            dataset[i] = list[i];
+            callback({dataset, pivotIndex: i, auxCount: count});
+            await sleep(speed);
+        }
+
+        callback({dataset, auxCount: count});
+    }
+
+    /**
+     *
+     * @param tree
+     * @param data
+     * @param order
+     * @private
+     */
+    private insertOfBST(tree: BSTNode | null, data: DataType, order: OrderType): BSTNode {
+        if (tree === null) {
+            return {mid: data, lhs: null, rhs: null};
+        }
+
+        if (order === 'ascent') {
+            if (data.value < tree.mid.value) {
+                tree.lhs = this.insertOfBST(tree.lhs, data, order);
+            }
+
+            if (data.value > tree.mid.value) {
+                tree.rhs = this.insertOfBST(tree.rhs, data, order);
+            }
+        }
+
+        if (order === 'descent') {
+            if (data.value > tree.mid.value) {
+                tree.lhs = this.insertOfBST(tree.lhs, data, order);
+            }
+
+            if (data.value < tree.mid.value) {
+                tree.rhs = this.insertOfBST(tree.rhs, data, order);
+            }
+        }
+
+        return tree;
+    }
+
+    /**
+     *
+     * @param tree
+     * @param list
+     * @private
+     */
+    private traverseOfBST(tree: BSTNode | null, list: DataType[]): DataType[] {
+        if (tree !== null) {
+            list = this.traverseOfBST(tree.lhs, list);
+            list.push(tree.mid);
+            list = this.traverseOfBST(tree.rhs, list);
+        }
+
+        return list;
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param base
+     * @param speed
+     * @param order
+     * @param callback
+     */
+    public async sortByBucket(dataset: DataType[], base: BaseType, speed: SpeedType, order: OrderType,
+                              callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let buckets: DataType[][] = Array.from({length: base}).map(() => []);
+        let index: number = 0, span: number = Math.ceil(dataset.length / base), j: number;
+        let swapCount: number = 0, auxCount: number = 0;
+
+        for (let i = 0; i < dataset.length; i++) {
+            let idx: number = Math.floor((dataset[i].value - 1) / span);
+
+            if (order === 'ascent') {
+                buckets[idx].push(dataset[i]);
+            }
+
+            if (order === 'descent') {
+                buckets[base - idx - 1].push(dataset[i]);
+            }
+
+            auxCount += 1;
+            callback({dataset, pivotIndex: i, auxCount});
+            await sleep(speed);
+        }
+
+        for (let i = 0; i < buckets.length; i++) {
+            for (let j = 0; j < buckets[i].length; j++) {
+                auxCount += 1;
+                dataset[index++] = buckets[i][j];
+                callback({dataset, pivotIndex: index, auxCount});
                 await sleep(speed);
             }
         }
 
-        callback({dataset, swapCount: count});
+        for (let i = 0; i < dataset.length; i += span) {
+            j = Math.min(i + span - 1, dataset.length - 1);
+
+            if (span <= 16) {
+                await this._dcss.sortByInsertion(dataset, i, j, swapCount, speed, order, value => {
+                    swapCount = value.swapCount as number;
+                    callback({...value, swapCount, auxCount});
+                });
+            } else {
+                await this._dcss.sortByQuick(dataset, i, j, swapCount, speed, order, value => {
+                    swapCount = value.swapCount as number;
+                    callback({...value, swapCount, auxCount});
+                });
+            }
+
+            await sleep(speed);
+        }
+
+        buckets.forEach(bucket => bucket.length = 0);
+        buckets.length = 0;
+        callback({dataset, swapCount, auxCount});
     }
 
     /**
@@ -2555,86 +2911,69 @@ export class DemoUnstableSortService {
      * @param order
      * @param callback
      */
-    public async sortByCycle(dataset: DataType[], speed: SpeedType, order: OrderType,
+    public async sortByCount(dataset: DataType[], speed: SpeedType, order: OrderType,
                              callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let pivot: number, point: number, count: number = 0;
+        let min: DataType = dataset[this._dsus.min(dataset, 0, dataset.length - 1)];
+        let max: DataType = dataset[this._dsus.max(dataset, 0, dataset.length - 1)];
+        let buckets: number[] = Array.from({length: max.value - min.value + 1}).map(() => 0);
+        let index: number = 0, count: number = 0;
 
-        for (let start = 0; start + 1 < dataset.length; start++) {
-            pivot = start;
-            point = start;
-
-            for (let i = start + 1; i < dataset.length; i++) {
-                if (order === 'ascent' && dataset[i].value < dataset[start].value) {
-                    point++;
-                }
-
-                if (order === 'descent' && dataset[i].value > dataset[start].value) {
-                    point++;
-                }
-
-                callback({dataset, pivotIndex: start, currIndex: i, swapCount: count});
-                await sleep(speed);
-            }
-
-            if (point === start) continue;
-
-            while (dataset[point].value === dataset[start].value) {
-                pivot++;
-            }
-
+        for (let i = 0; i < dataset.length; i++) {
             count += 1;
-            this._dsus.swap(dataset, point, pivot);
-            callback({dataset, pivotIndex: start, currIndex: point, nextIndex: pivot, swapCount: count});
-            await this.cycleSeek(dataset, start, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
+            buckets[dataset[i].value - min.value]++;
+            callback({dataset, pivotIndex: i, auxCount: count});
+            await sleep(speed);
         }
 
-        callback({dataset, swapCount: count});
+        if (order === 'ascent') {
+            for (let i = 0; i < buckets.length; i++) {
+                index = await DemoDistributionSortService.countBack(dataset, min, buckets, i, index, count, speed,
+                    value => {
+                        count = value.auxCount as number;
+                        callback({...value, auxCount: count});
+                    });
+            }
+        }
+
+        if (order === 'descent') {
+            for (let i = buckets.length - 1; i >= 0; i--) {
+                index = await DemoDistributionSortService.countBack(dataset, min, buckets, i, index, count, speed,
+                    value => {
+                        count = value.auxCount as number;
+                        callback({...value, auxCount: count});
+                    });
+            }
+        }
+
+        buckets.length = 0;
+        callback({dataset, auxCount: count});
     }
 
     /**
      *
      * @param dataset
+     * @param min
+     * @param buckets
+     * @param i
      * @param index
      * @param count
      * @param speed
-     * @param order
      * @param callback
      * @private
      */
-    private async cycleSeek(dataset: DataType[], index: number, count: number, speed: SpeedType, order: OrderType,
-                            callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let pivot: number, point: number = -1;
-
-        while (point !== index) {
-            pivot = index;
-            point = index;
-
-            for (let i = index + 1; i < dataset.length; i++) {
-                if (order === 'ascent' && dataset[i].value < dataset[index].value) {
-                    point++;
-                }
-
-                if (order === 'descent' && dataset[i].value > dataset[index].value) {
-                    point++;
-                }
-
-                callback({dataset, pivotIndex: index, currIndex: i, swapCount: count});
-                await sleep(speed);
-            }
-
-            if (point === index) break;
-
-            while (dataset[point].value === dataset[index].value) {
-                pivot++;
-            }
-
+    private static async countBack(dataset: DataType[], min: DataType, buckets: number[], i: number, index: number,
+                                   count: number, speed: SpeedType,
+                                   callback: (_value: SortReturnMeta) => void): Promise<number> {
+        while (buckets[i] > 0) {
             count += 1;
-            this._dsus.swap(dataset, point, pivot);
-            callback({dataset, pivotIndex: index, currIndex: point, nextIndex: pivot, swapCount: count});
+            dataset[index] = {value: i + min.value, ratio: (i + min.value) / dataset.length};
+            callback({dataset, pivotIndex: index, auxCount: count});
+            buckets[i]--;
+            index++;
+            await sleep(speed);
         }
+
+        return index;
     }
 
     /**
@@ -2685,7 +3024,7 @@ export class DemoUnstableSortService {
                 key = Object.keys(map)[i];
 
                 if (map[key].length > 1) {
-                    await this.sortByQuick(dataset, index, index + map[key].length - 1, swapCount, speed, order,
+                    await this._dcss.sortByQuick(dataset, index, index + map[key].length - 1, swapCount, speed, order,
                         value => {
                             swapCount = value.swapCount as number;
                             callback({...value, swapCount, auxCount})
@@ -2714,7 +3053,7 @@ export class DemoUnstableSortService {
                 key = Object.keys(map)[i];
 
                 if (map[key].length > 1) {
-                    await this.sortByQuick(dataset, index, index + map[key].length - 1, swapCount, speed, order,
+                    await this._dcss.sortByQuick(dataset, index, index + map[key].length - 1, swapCount, speed, order,
                         value => {
                             swapCount = value.swapCount as number;
                             callback({...value, swapCount, auxCount})
@@ -2731,142 +3070,69 @@ export class DemoUnstableSortService {
     /**
      *
      * @param dataset
-     * @param count
      * @param speed
      * @param order
      * @param callback
      */
-    public async sortByHeap(dataset: DataType[], count: number, speed: SpeedType, order: OrderType,
-                            callback: (_value: SortReturnMeta) => void): Promise<void> {
-        for (let i = Math.floor(dataset.length * 0.5 - 1); i >= 0; i--) {
-            await this.heapify(dataset, i, dataset.length, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-        }
+    public async sortByPigeonHole(dataset: DataType[], speed: SpeedType, order: OrderType,
+                                  callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let holes: number[] = Array.from({length: dataset.length}).map(() => 0);
+        let count: number = 0, index: number = 0;
 
-        for (let i = dataset.length - 1; i >= 0; i--) {
+        for (let i = 0; i < dataset.length; i++) {
             count += 1;
-            this._dsus.swap(dataset, i, 0);
-            callback({dataset, currIndex: i, nextIndex: 0, swapCount: count});
-            await this.heapify(dataset, 0, i, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
+            holes[dataset[i].value - 1] += 1;
+            callback({dataset, pivotIndex: i, auxCount: count});
+            await sleep(speed);
         }
-
-        await callback({dataset, swapCount: count});
-    }
-
-    /**
-     *
-     * @param dataset
-     * @param pivot
-     * @param size
-     * @param count
-     * @param speed
-     * @param order
-     * @param callback
-     * @private
-     */
-    private async heapify(dataset: DataType[], pivot: number, size: number, count: number,
-                          speed: SpeedType, order: OrderType,
-                          callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let lhs: number = pivot + pivot + 1;
-        let rhs: number = pivot + pivot + 2;
-        let point: number = pivot;
 
         if (order === 'ascent') {
-            if (lhs < size && dataset[lhs].value > dataset[pivot].value) {
-                point = lhs;
-            }
-
-            if (rhs < size && dataset[rhs].value > dataset[point].value) {
-                point = rhs;
+            for (let i = 0; i < holes.length; i++) {
+                index = await DemoDistributionSortService.holeBack(dataset, holes, i, index, count, speed, value => {
+                    count = value.auxCount as number;
+                    callback({...value, auxCount: count});
+                });
             }
         }
 
         if (order === 'descent') {
-            if (lhs < size && dataset[lhs].value < dataset[pivot].value) {
-                point = lhs;
-            }
-
-            if (rhs < size && dataset[rhs].value < dataset[point].value) {
-                point = rhs;
+            for (let i = dataset.length - 1; i >= 0; i--) {
+                index = await DemoDistributionSortService.holeBack(dataset, holes, i, index, count, speed, value => {
+                    count = value.auxCount as number;
+                    callback({...value, auxCount: count});
+                });
             }
         }
 
-        if (point !== pivot) {
-            count += 1;
-            this._dsus.swap(dataset, pivot, point);
-            callback({dataset, currIndex: pivot, nextIndex: point, swapCount: count});
-            await this.heapify(dataset, point, size, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-            await sleep(speed);
-        }
+        holes.length = 0;
+        callback({dataset, auxCount: count});
     }
 
     /**
      *
      * @param dataset
-     * @param speed
-     * @param order
-     * @param callback
-     */
-    public async sortByIntro(dataset: DataType[], speed: SpeedType, order: OrderType,
-                             callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let limit: number = 2 * Math.floor(Math.log2(dataset.length)), count: number = 0;
-        await this.introTask(dataset, 0, dataset.length - 1, limit, count, speed, order, value => {
-            count = value.swapCount as number;
-            callback({...value, swapCount: count});
-        });
-        callback({dataset, swapCount: count});
-    }
-
-    /**
-     *
-     * @param dataset
-     * @param lhs
-     * @param rhs
-     * @param limit
+     * @param holes
+     * @param i
+     * @param index
      * @param count
      * @param speed
-     * @param order
      * @param callback
      * @private
      */
-    private async introTask(dataset: DataType[], lhs: number, rhs: number, limit: number, count: number,
-                            speed: SpeedType, order: OrderType,
-                            callback: (_value: SortReturnMeta) => void): Promise<void> {
-        if (rhs - lhs < 16) {
-            await this._dsss.sortByInsertion(dataset, lhs, rhs, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-        } else {
-            if (limit === 0) {
-                await this.sortByHeap(dataset, count, speed, order, value => {
-                    count = value.swapCount as number;
-                    callback({...value, swapCount: count});
-                });
-                return;
+    private static async holeBack(dataset: DataType[], holes: number[], i: number, index: number,
+                                  count: number, speed: SpeedType,
+                                  callback: (_value: SortReturnMeta) => void): Promise<number> {
+        if (holes[i] > 0) {
+            for (let j = 0; j < holes[i]; j++) {
+                count += 1;
+                dataset[index] = {value: i + 1, ratio: (i + 1) / dataset.length};
+                callback({dataset, pivotIndex: index, auxCount: count});
+                index++;
+                await sleep(speed);
             }
-
-            let mid: number = await this.partition(dataset, lhs, rhs, rhs, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-            await this.introTask(dataset, lhs, mid - 1, limit - 1, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-            await this.introTask(dataset, mid + 1, rhs, limit - 1, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
         }
+
+        return index;
     }
 
     /**
@@ -2969,582 +3235,284 @@ export class DemoUnstableSortService {
     /**
      *
      * @param dataset
-     * @param lhs
-     * @param rhs
-     * @param count
+     * @param base
      * @param speed
      * @param order
      * @param callback
      */
-    public async sortByQuick(dataset: DataType[], lhs: number, rhs: number, count: number,
-                             speed: SpeedType, order: OrderType,
-                             callback: (_value: SortReturnMeta) => void): Promise<void> {
-        if (lhs < rhs) {
-            let mid: number = await this.partition(dataset, lhs, rhs, rhs, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-            await this.sortByQuick(dataset, lhs, mid - 1, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-            await this.sortByQuick(dataset, mid + 1, rhs, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
+    public async sortByRadixLSD(dataset: DataType[], base: BaseType, speed: SpeedType, order: OrderType,
+                                callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let index: number = this._dsus.max(dataset, 0, dataset.length - 1), count: number = 0;
+        let digits: number = dataset[index].value.toString(base).length, value: string;
+
+        for (let digit = 1; digit <= digits; digit++) {
+            for (let i = 0; i < dataset.length; i++) {
+                count += 1;
+                value = dataset[i].value.toString(base);
+                value = '0'.repeat(digits - value.length) + value;
+                dataset[i].digit = Number.parseInt(value[digits - digit], base);
+                callback({dataset, pivotIndex: i, auxCount: count});
+                await sleep(speed);
+            }
+
+            await this.radixMergeSort(dataset, 0, dataset.length - 1, 0, count, speed, order,
+                value => {
+                    count = value.auxCount as number;
+                    callback({...value, auxCount: count});
+                });
         }
 
-        await callback({dataset, swapCount: count});
+        callback({dataset, auxCount: count});
     }
-
-    // public async sortByQuickPartial(dataset: DataType[], lhs: number, rhs: number, k: number, count: number,
-    //                          speed: SpeedType, order: OrderType,
-    //                          callback: (_value: SortReturnMeta) => void): Promise<void> {
-    //     if (lhs < rhs) {
-    //         let pnt: number = Math.floor(Math.random() * (rhs - lhs + 1) + lhs);
-    //
-    //         if (order === 'ascent' && dataset[lhs].value > dataset[pnt].value) {
-    //             count += 1;
-    //             this._dsus.swap(dataset, lhs, pnt);
-    //             callback({dataset, currIndex: lhs, nextIndex: pnt, swapCount: count});
-    //         }
-    //
-    //         if (order === 'descent' && dataset[lhs].value < dataset[pnt].value) {
-    //             count += 1;
-    //             this._dsus.swap(dataset, lhs, pnt);
-    //             callback({dataset, currIndex: lhs, nextIndex: pnt, swapCount: count});
-    //         }
-    //
-    //         let mid: number = await this.partition(dataset, lhs, rhs, pnt, count, speed, order, value => {
-    //             count = value.swapCount as number;
-    //             callback({...value, swapCount: count});
-    //         });
-    //         await this.sortByQuickPartial(dataset, lhs, mid - 1, k, count, speed, order, value => {
-    //             count = value.swapCount as number;
-    //             callback({...value, swapCount: count});
-    //         });
-    //
-    //         if (mid < k - 1) {
-    //             await this.sortByQuickPartial(dataset, mid + 1, rhs, k, count, speed, order, value => {
-    //                 count = value.swapCount as number;
-    //                 callback({...value, swapCount: count});
-    //             });
-    //         }
-    //     }
-    //
-    //     await callback({dataset, swapCount: count});
-    // }
 
     /**
      *
      * @param dataset
+     * @param base
+     * @param speed
+     * @param order
+     * @param callback
+     */
+    public async sortByRadixMSD(dataset: DataType[], base: BaseType, speed: SpeedType, order: OrderType,
+                                callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let buckets: DataType[][] = Array.from({length: base}).map(() => []);
+        let index: number = this._dsus.max(dataset, 0, dataset.length - 1);
+        let digits: number = dataset[index].value.toString(base).length, swapCount: number = 0, auxCount: number = 0;
+        await this.radixMSD(dataset, buckets, digits, 0, 0, dataset.length - 1, base,
+            swapCount, auxCount, speed, order, value => {
+                swapCount = value.swapCount as number;
+                auxCount = value.auxCount as number;
+                callback({...value, swapCount, auxCount});
+            });
+        buckets.forEach(bucket => bucket.length = 0);
+        buckets.length = 0;
+        callback({dataset, swapCount, auxCount});
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param buckets
+     * @param digits
+     * @param digit
      * @param lhs
      * @param rhs
-     * @param pnt
-     * @param count
+     * @param base
+     * @param swapCount
+     * @param auxCount
      * @param speed
      * @param order
      * @param callback
      * @private
      */
-    private async partition(dataset: DataType[], lhs: number, rhs: number, pnt: number, count: number,
-                            speed: SpeedType, order: OrderType,
-                            callback: (_value: SortReturnMeta) => void): Promise<number> {
-        let pivot: DataType = dataset[pnt], i: number = lhs - 1;
+    private async radixMSD(dataset: DataType[], buckets: DataType[][], digits: number, digit: number,
+                           lhs: number, rhs: number, base: BaseType, swapCount: number, auxCount: number,
+                           speed: SpeedType, order: OrderType,
+                           callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let ranges: RangeType[], bit: number, value: string;
 
-        for (let j = lhs; j <= rhs - 1; j++) {
-            if (order === 'ascent' && dataset[j].value <= pivot.value) {
-                i += 1;
-                count += 1;
-                this._dsus.swap(dataset, i, j);
-                callback({dataset, pivotIndex: rhs, currIndex: j, nextIndex: i, swapCount: count});
-            } else if (order === 'descent' && dataset[j].value >= pivot.value) {
-                i += 1;
-                count += 1;
-                this._dsus.swap(dataset, i, j);
-                callback({dataset, pivotIndex: rhs, currIndex: j, nextIndex: i, swapCount: count});
-            } else {
-                await callback({dataset, pivotIndex: rhs, currIndex: j, swapCount: count});
-            }
+        for (let i = lhs; i <= rhs; i++) {
+            value = dataset[i].value.toString(base);
+            value = '0'.repeat(digits - value.length) + value;
+            bit = Number.parseInt(value[digit], base);
+            dataset[i].digit = bit;
 
-            await sleep(speed);
-        }
-
-        count += 1;
-        this._dsus.swap(dataset, i + 1, rhs);
-        callback({dataset, pivotIndex: rhs, currIndex: rhs, nextIndex: i + 1, swapCount: count});
-        return i + 1;
-    }
-
-    /**
-     *
-     * @param dataset
-     * @param lhs
-     * @param rhs
-     * @param count
-     * @param speed
-     * @param order
-     * @param callback
-     */
-    public async sortByQuick2Way(dataset: DataType[], lhs: number, rhs: number, count: number,
-                                 speed: SpeedType, order: OrderType,
-                                 callback: (_value: SortReturnMeta) => void): Promise<void> {
-        if (lhs < rhs) {
-            let mid: number = await this.partitionBy2Way(dataset, lhs, rhs, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-            await this.sortByQuick2Way(dataset, lhs, mid - 1, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-            await this.sortByQuick2Way(dataset, mid + 1, rhs, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-        }
-
-        await callback({dataset, swapCount: count});
-    }
-
-    /**
-     *
-     * @param dataset
-     * @param lhs
-     * @param rhs
-     * @param count
-     * @param speed
-     * @param order
-     * @param callback
-     * @private
-     */
-    private async partitionBy2Way(dataset: DataType[], lhs: number, rhs: number, count: number,
-                                  speed: SpeedType, order: OrderType,
-                                  callback: (_value: SortReturnMeta) => void): Promise<number> {
-        let pivot: DataType = dataset[lhs], i: number = lhs + 1, j: number = rhs;
-
-        while (i <= j) {
-            if (order === 'ascent' && dataset[i].value < pivot.value) {
-                i++;
-                callback({dataset, pivotIndex: lhs, currIndex: i, swapCount: count});
-            } else if (order === 'ascent' && dataset[j].value > pivot.value) {
-                j--;
-                callback({dataset, pivotIndex: lhs, nextIndex: j, swapCount: count});
-            } else if (order === 'descent' && dataset[i].value > pivot.value) {
-                i++;
-                callback({dataset, pivotIndex: lhs, currIndex: i, swapCount: count});
-            } else if (order === 'descent' && dataset[j].value < pivot.value) {
-                j--;
-                callback({dataset, pivotIndex: lhs, nextIndex: j, swapCount: count});
-            } else {
-                count += 1;
-                this._dsus.swap(dataset, i, j);
-                callback({dataset, pivotIndex: lhs, currIndex: i, nextIndex: j, swapCount: count});
-                i++;
-                j--;
-            }
-
-            await sleep(speed);
-        }
-
-        count += 1;
-        this._dsus.swap(dataset, j, lhs);
-        callback({dataset, currIndex: j, nextIndex: lhs, swapCount: count});
-        return j;
-    }
-
-    /**
-     *
-     * @param dataset
-     * @param lhs
-     * @param rhs
-     * @param count
-     * @param speed
-     * @param order
-     * @param callback
-     */
-    public async sortByQuick3Way(dataset: DataType[], lhs: number, rhs: number, count: number,
-                                 speed: SpeedType, order: OrderType,
-                                 callback: (_value: SortReturnMeta) => void): Promise<void> {
-        if (lhs < rhs) {
-            let pivot: DataType = dataset[lhs], lt: number = lhs, gt: number = rhs, i: number = lhs + 1;
-
-            while (i <= gt) {
-                if (order === 'ascent' && dataset[i].value < pivot.value) {
-                    count += 1;
-                    this._dsus.swap(dataset, lt, i);
-                    callback({dataset, pivotIndex: lhs, currIndex: lt, nextIndex: i, swapCount: count});
-                    i++;
-                    lt++;
-                } else if (order === 'ascent' && dataset[i].value > pivot.value) {
-                    count += 1;
-                    this._dsus.swap(dataset, gt, i);
-                    callback({dataset, pivotIndex: lhs, currIndex: gt, nextIndex: i, swapCount: count});
-                    gt--;
-                } else if (order === 'descent' && dataset[i].value > pivot.value) {
-                    count += 1;
-                    this._dsus.swap(dataset, lt, i);
-                    callback({dataset, pivotIndex: lhs, currIndex: lt, nextIndex: i, swapCount: count});
-                    i++;
-                    lt++;
-                } else if (order === 'descent' && dataset[i].value < pivot.value) {
-                    count += 1;
-                    this._dsus.swap(dataset, gt, i);
-                    callback({dataset, pivotIndex: lhs, currIndex: gt, nextIndex: i, swapCount: count});
-                    gt--;
-                } else {
-                    i++;
-                }
-
-                await sleep(speed);
-            }
-
-            await this.sortByQuick3Way(dataset, lhs, lt - 1, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-            await this.sortByQuick3Way(dataset, gt + 1, rhs, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-        }
-
-        callback({dataset, swapCount: count});
-    }
-
-    /**
-     *
-     * @param dataset
-     * @param lhs
-     * @param rhs
-     * @param count
-     * @param speed
-     * @param order
-     * @param callback
-     */
-    public async sortByQuickDualPivot(dataset: DataType[], lhs: number, rhs: number, count: number,
-                                      speed: SpeedType, order: OrderType,
-                                      callback: (_value: SortReturnMeta) => void): Promise<void> {
-        if (lhs < rhs) {
-            let pivots: DualPivotType = await this.partitionDualPivot(dataset, lhs, rhs, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-            await this.sortByQuickDualPivot(dataset, lhs, pivots.fst - 1, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-            await this.sortByQuickDualPivot(dataset, pivots.fst + 1, pivots.snd - 1, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-            await this.sortByQuickDualPivot(dataset, pivots.snd + 1, rhs, count, speed, order, value => {
-                count = value.swapCount as number;
-                callback({...value, swapCount: count});
-            });
-        }
-
-        callback({dataset, swapCount: count});
-    }
-
-    /**
-     *
-     * @param dataset
-     * @param lhs
-     * @param rhs
-     * @param count
-     * @param speed
-     * @param order
-     * @param callback
-     * @private
-     */
-    private async partitionDualPivot(dataset: DataType[], lhs: number, rhs: number, count: number,
-                                     speed: SpeedType, order: OrderType,
-                                     callback: (_value: SortReturnMeta) => void): Promise<DualPivotType> {
-        if (order === 'ascent' && dataset[lhs].value > dataset[rhs].value) {
-            count += 1
-            this._dsus.swap(dataset, lhs, rhs);
-            callback({dataset, currIndex: lhs, nextIndex: rhs, swapCount: count});
-            await sleep(speed);
-        }
-
-        if (order === 'descent' && dataset[lhs].value < dataset[rhs].value) {
-            count += 1;
-            this._dsus.swap(dataset, lhs, rhs);
-            callback({dataset, currIndex: lhs, nextIndex: rhs, swapCount: count});
-            await sleep(speed);
-        }
-
-        let lhsIndex: number = lhs + 1, rhsIndex: number = rhs - 1, midIndex: number = lhs + 1;
-        let fst: DataType = dataset[lhs], snd: DataType = dataset[rhs];
-
-        while (midIndex <= rhsIndex) {
-            if (order === 'ascent' && dataset[midIndex].value < fst.value) {
-                count += 1;
-                this._dsus.swap(dataset, midIndex, lhsIndex);
-                callback({
-                    dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: midIndex,
-                    nextIndex: lhsIndex, swapCount: count
-                });
-                lhsIndex++;
-            }
-
-            if (order === 'descent' && dataset[midIndex].value > fst.value) {
-                count += 1;
-                this._dsus.swap(dataset, midIndex, lhsIndex);
-                callback({
-                    dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: midIndex,
-                    nextIndex: lhsIndex, swapCount: count
-                });
-                lhsIndex++;
-            }
-
-            if (order === 'ascent' && dataset[midIndex].value > snd.value) {
-                while (midIndex < rhsIndex && dataset[rhsIndex].value > snd.value) {
-                    rhsIndex--;
-                }
-
-                count += 1;
-                this._dsus.swap(dataset, midIndex, rhsIndex);
-                callback({
-                    dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: midIndex,
-                    nextIndex: rhsIndex, swapCount: count
-                });
-                await sleep(speed);
-
-                if (dataset[midIndex].value < fst.value) {
-                    count += 1;
-                    this._dsus.swap(dataset, midIndex, lhsIndex);
-                    callback({
-                        dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: midIndex,
-                        nextIndex: lhsIndex, swapCount: count
-                    });
-                    lhsIndex++;
-                }
-
-                rhsIndex--;
-            }
-
-            if (order === 'descent' && dataset[midIndex].value < snd.value) {
-                while (midIndex < rhsIndex && dataset[rhsIndex].value < snd.value) {
-                    rhsIndex--;
-                }
-
-                count += 1;
-                this._dsus.swap(dataset, midIndex, rhsIndex);
-                callback({
-                    dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: midIndex,
-                    nextIndex: rhsIndex, swapCount: count
-                });
-                await sleep(speed);
-
-                if (dataset[midIndex].value > fst.value) {
-                    count += 1;
-                    this._dsus.swap(dataset, midIndex, lhsIndex);
-                    callback({
-                        dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: midIndex,
-                        nextIndex: lhsIndex, swapCount: count
-                    });
-                    lhsIndex++;
-                }
-
-                rhsIndex--;
-            }
-
-            midIndex++;
-            await sleep(speed);
-        }
-
-        lhsIndex--;
-        rhsIndex++;
-
-        count += 1;
-        this._dsus.swap(dataset, lhsIndex, lhs);
-        callback({
-            dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: lhsIndex,
-            nextIndex: lhs, swapCount: count
-        });
-        await sleep(speed);
-
-        count += 1
-        this._dsus.swap(dataset, rhsIndex, rhs);
-        callback({
-            dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, currIndex: rhsIndex,
-            nextIndex: rhs, swapCount: count
-        });
-        return {fst: lhsIndex, snd: rhsIndex};
-    }
-
-    /**
-     *
-     * @param dataset
-     * @param speed
-     * @param order
-     * @param callback
-     */
-    public async sortBySelection(dataset: DataType[], speed: SpeedType, order: OrderType,
-                                 callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let count: number = 0;
-
-        for (let i = 0; i < dataset.length - 1; i++) {
-            let k: number = i;
-
-            for (let j = i + 1; j < dataset.length; j++) {
-                if (order === 'ascent' && dataset[j].value < dataset[k].value) {
-                    k = j;
-                }
-
-                if (order === 'descent' && dataset[j].value > dataset[k].value) {
-                    k = j;
-                }
-
-                callback({dataset, pivotIndex: i, currIndex: j, nextIndex: k, swapCount: count});
-                await sleep(speed);
-            }
-
-            count += 1;
-            this._dsus.swap(dataset, i, k);
-            await callback({dataset, pivotIndex: i, currIndex: i, nextIndex: k, swapCount: count});
-            await sleep(speed);
-        }
-
-        await callback({dataset, swapCount: count});
-    }
-
-    /**
-     *
-     * @param dataset
-     * @param speed
-     * @param order
-     * @param callback
-     */
-    public async sortBySelectionDouble(dataset: DataType[], speed: SpeedType, order: OrderType,
-                                       callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let lhs: number = 0, rhs: number = dataset.length - 1, p: number, q: number, count: number = 0;
-
-        while (lhs <= rhs) {
-            p = lhs;
-            q = rhs;
-
-            if (order === 'ascent' && dataset[p].value > dataset[q].value) {
-                count += 1;
-                this._dsus.swap(dataset, p, q);
-                callback({dataset, lhsPivotIndex: p, rhsPivotIndex: p, swapCount: count});
-                await sleep(speed);
-            }
-
-            if (order === 'descent' && dataset[p].value < dataset[q].value) {
-                count += 1;
-                this._dsus.swap(dataset, p, q);
-                callback({dataset, lhsPivotIndex: p, rhsPivotIndex: p, swapCount: count});
-                await sleep(speed);
-            }
-
-            for (let i = lhs + 1, j = rhs - 1; i <= rhs && j >= lhs; i++, j--) {
-                if (order === 'ascent') {
-                    if (dataset[i].value < dataset[p].value) {
-                        p = i;
-                    }
-
-                    if (dataset[j].value > dataset[q].value) {
-                        q = j;
-                    }
-                }
-
-                if (order === 'descent') {
-                    if (dataset[i].value > dataset[p].value) {
-                        p = i;
-                    }
-
-                    if (dataset[j].value < dataset[q].value) {
-                        q = j;
-                    }
-                }
-
-                callback({
-                    dataset, lhsPivotIndex: lhs, rhsPivotIndex: rhs, lhsCurrIndex: i, lhsNextIndex: p,
-                    rhsCurrIndex: j, rhsNextIndex: q, swapCount: count
-                });
-                await sleep(speed);
-            }
-
-            count += 2;
-            this._dsus.swap(dataset, lhs, p);
-            this._dsus.swap(dataset, rhs, q);
-            callback({
-                dataset, lhsCurrIndex: lhs, lhsNextIndex: p, rhsCurrIndex: rhs, rhsNextIndex: q,
-                swapCount: count
-            });
-            lhs++;
-            rhs--;
-        }
-
-        callback({dataset, swapCount: count});
-    }
-
-    /**
-     *
-     * @param dataset
-     * @param speed
-     * @param order
-     * @param callback
-     */
-    public async sortByShell(dataset: DataType[], speed: SpeedType, order: OrderType,
-                             callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let count: number = 0;
-
-        for (let gap = Math.ceil(dataset.length * 0.5); gap > 0; gap = Math.floor(gap * 0.5)) {
-            for (let i = gap; i < dataset.length; i++) {
-                for (let j = i; j >= gap; j -= gap) {
-                    if (order === 'ascent' && dataset[j].value < dataset[j - gap].value) {
-                        count += 1;
-                        this._dsus.swap(dataset, j, j - gap);
-                        callback({dataset, pivotIndex: i, currIndex: j, nextIndex: j - gap, swapCount: count});
-                    } else if (order === 'descent' && dataset[j].value > dataset[j - gap].value) {
-                        count += 1;
-                        this._dsus.swap(dataset, j, j - gap);
-                        callback({dataset, pivotIndex: i, currIndex: j, nextIndex: j - gap, swapCount: count});
-                    } else {
-                        callback({dataset, pivotIndex: i, currIndex: j, swapCount: count});
-                    }
-
-                    await sleep(speed);
-                }
-
-                await callback({dataset, pivotIndex: i, swapCount: count});
-            }
-        }
-
-        await callback({dataset, swapCount: count});
-    }
-
-    /**
-     *
-     * @param dataset
-     * @param speed
-     * @param order
-     * @param callback
-     */
-    public async sortByTournament(dataset: DataType[], speed: SpeedType, order: OrderType,
-                                  callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let j: number = -1, count: number = 0;
-
-        for (let i = 0; i < dataset.length - 1; i++) {
             if (order === 'ascent') {
-                j = this._dsus.min(dataset, i, dataset.length - 1);
+                buckets[bit].push(dataset[i]);
             }
 
             if (order === 'descent') {
-                j = this._dsus.max(dataset, i, dataset.length - 1);
+                buckets[base - 1 - bit].push(dataset[i]);
             }
+        }
 
-            count += 1;
-            this._dsus.swap(dataset, i, j);
-            callback({dataset, currIndex: i, nextIndex: j, swapCount: count});
+        if (rhs - lhs <= 16) {
+            await this.radixInsertSort(dataset, lhs, rhs, swapCount, auxCount, speed, order, value => {
+                swapCount = value.swapCount as number;
+                auxCount = value.auxCount as number;
+                callback({...value, swapCount, auxCount});
+            });
+        } else {
+            await this.radixMergeSort(dataset, lhs, rhs, swapCount, auxCount, speed, order, value => {
+                auxCount = value.auxCount as number;
+                callback({...value, auxCount});
+            });
+        }
+
+        ranges = await DemoDistributionSortService.radixRange(buckets, lhs, rhs);
+        buckets.forEach(bucket => bucket.length = 0);
+
+        if (digit < digits - 1) {
+            for (let i = 0; i < ranges.length; i++) {
+                await this.radixMSD(dataset, buckets, digits, digit + 1, ranges[i].lhs, ranges[i].rhs,
+                    base, swapCount, auxCount, speed, order, value => {
+                        swapCount = value.swapCount as number;
+                        auxCount = value.auxCount as number;
+                        callback({...value, swapCount, auxCount});
+                    });
+            }
+        }
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param lhs
+     * @param rhs
+     * @param swapCount
+     * @param auxCount
+     * @param speed
+     * @param order
+     * @param callback
+     * @private
+     */
+    private async radixInsertSort(dataset: DataType[], lhs: number, rhs: number, swapCount: number,
+                                  auxCount: number, speed: SpeedType, order: OrderType,
+                                  callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let fst: number, snd: number;
+
+        for (let i = lhs; i <= rhs; i++) {
+            for (let j = i; j > lhs; j--) {
+                fst = dataset[j - 1].digit as number;
+                snd = dataset[j].digit as number;
+
+                if (order === 'ascent' && fst > snd) {
+                    swapCount += 1;
+                    this._dsus.swap(dataset, j, j - 1);
+                    callback({dataset, pivotIndex: i, currIndex: j, nextIndex: j - 1, swapCount, auxCount});
+                } else if (order === 'descent' && fst < snd) {
+                    swapCount += 1;
+                    this._dsus.swap(dataset, j, j - 1);
+                    callback({dataset, pivotIndex: i, currIndex: j, nextIndex: j - 1, swapCount, auxCount});
+                } else {
+                    await callback({dataset, pivotIndex: i, currIndex: j, swapCount, auxCount});
+                }
+
+                await sleep(speed);
+            }
+        }
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param lhs
+     * @param rhs
+     * @param swapCount
+     * @param auxCount
+     * @param auxCount
+     * @param speed
+     * @param order
+     * @param callback
+     * @private
+     */
+    private async radixMergeSort(dataset: DataType[], lhs: number, rhs: number, swapCount: number,
+                                 auxCount: number, speed: SpeedType, order: OrderType,
+                                 callback: (_value: SortReturnMeta) => void): Promise<void> {
+        if (lhs < rhs) {
+            let mid: number = Math.floor((rhs - lhs) * 0.5 + lhs);
+            await this.radixMergeSort(dataset, lhs, mid, swapCount, auxCount, speed, order, value => {
+                auxCount = value.auxCount as number;
+                callback({...value, auxCount});
+            });
+            await this.radixMergeSort(dataset, mid + 1, rhs, swapCount, auxCount, speed, order, value => {
+                auxCount = value.auxCount as number;
+                callback({...value, auxCount});
+            });
+            await DemoDistributionSortService.radixMerge(dataset, lhs, mid, rhs, swapCount, auxCount, speed, order,
+                value => {
+                    auxCount = value.auxCount as number;
+                    callback({...value, auxCount});
+                });
+        }
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param lhs
+     * @param mid
+     * @param rhs
+     * @param swapCount
+     * @param auxCount
+     * @param auxCount
+     * @param speed
+     * @param order
+     * @param callback
+     * @private
+     */
+    private static async radixMerge(dataset: DataType[], lhs: number, mid: number, rhs: number,
+                                    swapCount: number, auxCount: number, speed: SpeedType, order: OrderType,
+                                    callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let i: number = 0, j: number = 0, k: number = lhs, fst: number, snd: number;
+        let lhsLength: number = mid - lhs + 1, rhsLength: number = rhs - mid;
+        let lhsArray: DataType[] = new Array(lhsLength), rhsArray: DataType[] = new Array(rhsLength);
+
+        for (let x = 0; x < lhsLength; x++) {
+            auxCount += 1;
+            lhsArray[x] = dataset[lhs + x];
+            callback({dataset, pivotIndex: x + lhs, swapCount, auxCount});
             await sleep(speed);
         }
 
-        await callback({dataset, swapCount: count});
+        for (let x = 0; x < rhsLength; x++) {
+            auxCount += 1;
+            rhsArray[x] = dataset[mid + 1 + x];
+            callback({dataset, pivotIndex: mid + 1 + x, swapCount, auxCount});
+            await sleep(speed);
+        }
+
+        while (i < lhsLength && j < rhsLength) {
+            fst = lhsArray[i].digit as number;
+            snd = rhsArray[j].digit as number;
+
+            if (order === 'ascent' && fst <= snd) {
+                dataset[k] = lhsArray[i++];
+            } else if (order === 'descent' && fst >= snd) {
+                dataset[k] = lhsArray[i++];
+            } else {
+                dataset[k] = rhsArray[j++];
+            }
+
+            auxCount += 1;
+            await callback({dataset, pivotIndex: k++, currIndex: i + lhs, nextIndex: j + mid, swapCount, auxCount});
+            await sleep(speed);
+        }
+
+        while (i < lhsLength) {
+            auxCount += 1;
+            dataset[k++] = lhsArray[i++];
+            await callback({dataset, pivotIndex: k, currIndex: i + lhs, nextIndex: j + mid, swapCount, auxCount});
+            await sleep(speed);
+        }
+
+        while (j < rhsLength) {
+            auxCount += 1;
+            dataset[k++] = rhsArray[j++];
+            await callback({dataset, pivotIndex: k, currIndex: i + lhs, nextIndex: j + mid, swapCount, auxCount});
+            await sleep(speed);
+        }
+    }
+
+    /**
+     *
+     * @param buckets
+     * @param lhs
+     * @param rhs
+     * @private
+     */
+    private static async radixRange(buckets: DataType[][], lhs: number, rhs: number): Promise<RangeType[]> {
+        let ranges: RangeType[] = [], start: number = lhs, end: number;
+
+        for (let i = 0; i < buckets.length; i++) {
+            if (buckets[i].length > 0) {
+                end = Math.min(start + buckets[i].length - 1, rhs);
+                ranges.push({lhs: start, rhs: end});
+                start = end + 1;
+            }
+        }
+
+        return ranges;
     }
 
 }
