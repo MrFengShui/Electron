@@ -7,6 +7,7 @@ import {GlobalMaterialModule} from "./material.module";
 import {DemoErrorView} from "../../web/error/error.component";
 import {DemoIconView} from "../../web/icon/icon.component";
 import {DemoMazeGenerateView} from "../../web/maze/generate.component";
+import {DemoMazeSolveView} from "../../web/maze/solve.component";
 import {DemoSortView} from "../../web/sort/sort.component";
 
 import {DurationPipe} from "../pipe/duration.pipe";
@@ -18,6 +19,7 @@ import {SortStatusPipe} from "../../web/sort/sort.pipe";
         DemoErrorView,
         DemoIconView,
         DemoMazeGenerateView,
+        DemoMazeSolveView,
         DemoSortView,
         DurationPipe,
         MazeStatusPipe,
@@ -34,6 +36,7 @@ import {SortStatusPipe} from "../../web/sort/sort.pipe";
         DemoErrorView,
         DemoIconView,
         DemoMazeGenerateView,
+        DemoMazeSolveView,
         DemoSortView,
         DurationPipe,
         MazeStatusPipe,

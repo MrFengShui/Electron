@@ -13,13 +13,13 @@ import {DOCUMENT} from "@angular/common";
 import {MatDialog, MatDialogRef} from "@angular/material/dialog";
 import {BehaviorSubject, interval, Subject, Subscription} from "rxjs";
 
+type ColorType = 'spring' | 'summer' | 'autumn' | 'winter' | 'default';
+
 interface PaletteToggleModel {
 
-    color: 'spring' | 'summer' | 'autumn' | 'winter' | 'default';
-    theme: 'dark' | 'light';
+    color: ColorType;
     label: string;
     style: string;
-    value: string;
 
 }
 
@@ -67,27 +67,25 @@ export class AppComponent implements AfterViewInit {
 
     bright$: Subject<boolean> = new BehaviorSubject<boolean>(false);
     progress$: Subject<number> = new BehaviorSubject<number>(0);
-    toggle$: Subject<string> = new BehaviorSubject<string>('');
+
+    theme: boolean | null = null;
+    color: ColorType | null = null;
 
     readonly tags: { title: string, subtitle: string } = {
         title: 'Demospace Developed with Electron and Angular',
         subtitle: 'Copyright © 2022 MrFengShui All Copyrights Reserved'
     };
     readonly toggles: PaletteToggleModel[] = [
-        {color: 'default', theme: 'dark', label: 'Default Dark Theme', style: '#673AB7', value: 'fd'},
-        {color: 'default', theme: 'light', label: 'Default Light Theme', style: '#673AB7', value: 'fl'},
-        {color: 'spring', theme: 'dark', label: 'Spring Dark Theme', style: '#4CAF50', value: 'rd'},
-        {color: 'spring', theme: 'light', label: 'Spring Light Theme', style: '#4CAF50', value: 'rl'},
-        {color: 'summer', theme: 'dark', label: 'Summer Dark Theme', style: '#F44336', value: 'md'},
-        {color: 'summer', theme: 'light', label: 'Summer Light Theme', style: '#F44336', value: 'ml'},
-        {color: 'autumn', theme: 'dark', label: 'Autumn Dark Theme', style: '#FFC107', value: 'td'},
-        {color: 'autumn', theme: 'light', label: 'Autumn Light Theme', style: '#FFC107', value: 'tl'},
-        {color: 'winter', theme: 'dark', label: 'Winter Dark Theme', style: '#3F51B5', value: 'nd'},
-        {color: 'winter', theme: 'light', label: 'Winter Light Theme', style: '#3F51B5', value: 'nl'}
+        {color: 'default', label: 'Default Theme', style: '#673AB7'},
+        {color: 'spring', label: 'Spring Theme', style: '#4CAF50'},
+        {color: 'summer', label: 'Summer Theme', style: '#F44336'},
+        {color: 'autumn', label: 'Autumn Theme', style: '#FFC107'},
+        {color: 'winter', label: 'Winter Theme', style: '#3F51B5'}
     ];
     readonly links: RouteLinkModel[] = [
-        {icon: 'face', link: ['/demo', 'icon'], text: 'SVG Icons'},
-        {icon: 'route', link: ['/demo', 'maze', 'generate'], text: 'Maze Generation Algorithms'},
+        {icon: 'image_search', link: ['/demo', 'icon'], text: 'SVG Icons'},
+        {icon: 'route', link: ['/demo', 'maze', 'generate'], text: 'Maze-G Algorithms'},
+        {icon: 'route', link: ['/demo', 'maze', 'solve'], text: 'Maze-S Algorithms'},
         {icon: 'sort_by_alpha', link: ['/demo', 'sort'], text: 'Sorting Algorithms'}
     ];
 
@@ -109,48 +107,44 @@ export class AppComponent implements AfterViewInit {
             // this.showSplashScreen();
 
             if (value) {
-                this.toggle$.next(`${value.color[2]}${value.theme[0]}`);
                 this.renderColorTheme(value.color, value.theme);
             } else {
-                AppComponent.storeStorage('default', 'dark').then(() => {
-                    this.toggle$.next('fd');
-                    this.renderColorTheme('default', 'dark');
-                });
+                AppComponent.storeStorage('default', true).then(() =>
+                    this.renderColorTheme('default', true));
             }
         });
     }
 
-    handleToggleThemeAction(toggle: PaletteToggleModel): void {
-        AppComponent.storeStorage(toggle.color, toggle.theme).then(() => {
-            this.toggle$.next(toggle.value);
-            this.renderColorTheme(toggle.color, toggle.theme);
-        });
+    listenThemeChange(change: boolean): void {
+        AppComponent.storeStorage(this.color, change).then(() => this.renderColorTheme(this.color, change));
     }
 
-    findToggle(value: string | null): string {
-        return value ? this.toggles.find(toggle => toggle.value === value)?.label as string : '';
+    handleColorAction(event: MouseEvent, color: ColorType | null): void {
+        event.stopPropagation();
+        AppComponent.storeStorage(color, this.theme).then(() => this.renderColorTheme(color, this.theme));
     }
 
-    private renderColorTheme(color: any, theme: any): void {
+    findToggle(color: ColorType | null): string {
+        return color ? this.toggles.find(toggle => toggle.color === color)?.label as string : '';
+    }
+
+    private renderColorTheme(color: ColorType | null, theme: boolean | null): void {
         let task = setTimeout(() => {
             clearTimeout(task);
+            this.color = color;
+            this.theme = theme;
             this._render.setAttribute(this._document.documentElement, 'class',
-                `global-theme theme-${color} ${theme === 'dark' ? 'active' : ''}`);
+                `global-theme theme-${color} ${theme ? 'active' : ''}`);
         });
     }
 
-    private static async storeStorage(color: any, theme: any): Promise<void> {
+    private static async storeStorage(color: ColorType | null, theme: boolean | null): Promise<void> {
         window.sessionStorage.setItem('demo-mode', JSON.stringify({color, theme}));
     }
 
-    private static async loadStorage(): Promise<{ color: any, theme: any } | null> {
+    private static async loadStorage(): Promise<{ color: ColorType, theme: boolean } | null> {
         let value: string | null = window.sessionStorage.getItem('demo-mode');
-
-        if (value) {
-            return JSON.parse(value);
-        }
-
-        return null;
+        return value ? JSON.parse(value) : null;
     }
 
     private execLoadingProgress(): void {

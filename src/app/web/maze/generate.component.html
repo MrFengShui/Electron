@@ -1,5 +1,5 @@
 <mat-card class="mat-elevation-z0 demo-maze-view-wrapper h-100">
-    <form [formGroup]="group" #form>
+    <form [formGroup]="group">
         <mat-card-header class="sx-50">
             <mat-card-title class="mb-125" style="font-size: 24px">Maze Generation Algorithms</mat-card-title>
             <mat-card-subtitle class="mb-0">Total: {{nameToggles.length | number}}</mat-card-subtitle>
@@ -34,34 +34,128 @@
         </mat-card-header>
     </form>
     <mat-divider inset style="margin: 0 -1rem 1rem;width: calc(100% + 2rem);"></mat-divider>
-    <mat-card-content class="h-100"></mat-card-content>
+    <mat-card-content class="overflow overflow-y h-100">
+        <table mat-table [dataSource]="source" class="mat-elevation-z0 w-100"
+               [class.h-100]="source.data.length === 0">
+            <ng-container matColumnDef="flag">
+                <th mat-header-cell *matHeaderCellDef class="text-right px-50">
+                    <mat-checkbox color="primary" [checked]="select.hasValue() && checkAllSelected()"
+                                  [disabled]="source.data.length === 0"
+                                  [indeterminate]="select.hasValue() && !checkAllSelected()"
+                                  (change)="$event ? toggleAll() : null"></mat-checkbox>
+                </th>
+                <td mat-cell *matCellDef="let item" class="text-right px-50">
+                    <mat-checkbox color="primary" [checked]="select.isSelected(item)"
+                                  (change)="$event ? select.toggle(item) : null"></mat-checkbox>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="code">
+                <th mat-header-cell *matHeaderCellDef class="text-right px-50">No.</th>
+                <td mat-cell *matCellDef="let item" class="text-right px-50"> {{item.code}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef class="w-100 px-50" style="white-space: nowrap">Algorithm</th>
+                <td mat-cell *matCellDef="let item" class="px-50"> {{item.name}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="cols">
+                <th mat-header-cell *matHeaderCellDef class="text-right px-50" style="white-space: nowrap">Grid Columns</th>
+                <td mat-cell *matCellDef="let item" class="text-right px-50"> {{item.cols}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="rows">
+                <th mat-header-cell *matHeaderCellDef class="text-right px-50" style="white-space: nowrap">Grid Rows</th>
+                <td mat-cell *matCellDef="let item" class="text-right px-50"> {{item.rows}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="time">
+                <th mat-header-cell *matHeaderCellDef class="text-center px-50" style="white-space: nowrap">Time</th>
+                <td mat-cell *matCellDef="let item" class="text-right px-50"> {{item.time | duration}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="data">
+                <th mat-header-cell *matHeaderCellDef class="text-center px-50" style="white-space: nowrap">Action</th>
+                <td mat-cell *matCellDef="let item" class="px-50" style="white-space: nowrap">
+                    <button mat-icon-button (click)="handleToggleViewAction(item)">
+                        <mat-icon>visibility</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" (click)="handleToggleOneDelAction(item)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </td>
+            </ng-container>
+
+            <tr class="mat-row" *matNoDataRow>
+                <td class="mat-cell text-center" [attr.colspan]="headers.length">
+                    <div class="d-flex align-items-center w-fit sx-50 mx-auto">
+                        <img src="assets/image/electron-less.svg" alt="electron-less.svg" width="256" height="256">
+                        <mat-icon style="font-size: 8rem;width: auto;height: auto;">add</mat-icon>
+                        <img src="assets/image/angular-less.svg" alt="angular-less.svg" width="256" height="256">
+                    </div>
+                </td>
+            </tr>
+            <tr mat-header-row *matHeaderRowDef="headers; sticky: true"></tr>
+            <tr mat-row *matRowDef="let row; columns: headers;"></tr>
+        </table>
+    </mat-card-content>
     <mat-divider inset style="margin: 0 -1rem 1rem;width: calc(100% + 2rem);"></mat-divider>
     <mat-card-footer class="d-flex justify-content-end align-items-center sx-50 m-0 p-0">
-        <button mat-raised-button color="primary" [disabled]="!group.valid" class="py-25" style="width: 6rem"
+        <button mat-raised-button color="warn" [disabled]="select.selected.length === 0"
+                class="py-25" style="width: 6rem"
+                (click)="handleToggleMultiDelAction()">Delete</button>
+        <button mat-raised-button color="warn" [disabled]="source.data.length === 0"
+                class="py-25" style="width: 6rem"
+                (click)="handleToggleClearAction()">Clear</button>
+        <button mat-raised-button color="accent" [disabled]="select.selected.length === 0"
+                class="py-25" style="width: 6rem"
+                (click)="handleToggleSaveAction()">Save</button>
+        <span class="flex-fill"></span>
+        <button mat-raised-button color="primary" class="py-25" style="width: 6rem"
                 (click)="handleToggleRunAction()">Start</button>
-        <button mat-raised-button color="accent" [disabled]="!group.valid" class="py-25" style="width: 6rem"
+        <button mat-raised-button color="accent" class="py-25" style="width: 6rem"
                 (click)="handleToggleResetAction()">Reset</button>
     </mat-card-footer>
 </mat-card>
 <mat-card class="bg-base flex-col-pos p-50" [class.d-none]="!(shown$ | async)"
-          style="position: fixed;inset: 0;z-index: 10;">
+          style="position: fixed;inset: 0;z-index: 1000;">
     <mat-card-title-group class="align-items-center">
         <span class="mat-title flex-fill my-0">Name: {{select$ | async}}</span>
         <span class="mat-title flex-fill my-0">Status: {{phase$ | async | mss}}</span>
         <span class="mat-title flex-fill my-0">Time: {{timer$ | async | duration}}</span>
-        <button mat-icon-button [disabled]="(phase$ | async) !== 0" (click)="shown$.next(false)">
+        <button mat-icon-button [disabled]="(phase$ | async) !== 0" (click)="handleToggleCloseAction()">
             <mat-icon>close</mat-icon>
         </button>
     </mat-card-title-group>
     <mat-card-content class="maze-grid border bt-1 bb-1 bl-1 br-1 b-primary" style="height: calc(100% - 40px)"
                       [style.grid-template-columns]="'repeat(' + (columns$ | async) + ', auto)'">
-        <div class="border bt-1 bb-1 bl-1 br-1 b-primary" style="box-sizing: border-box" #tile
-             [class.bg-warn]="(scanner$ | async) === cell.y"
-             [class.bg-warn-400]="(startMarker$ | async)?.x === cell.x && (startMarker$ | async)?.y === cell.y"
-             [class.bg-warn-600]="(finalMarker$ | async)?.x === cell.x && (finalMarker$ | async)?.y === cell.y"
-             [class.bg-accent]="(marker$ | async)?.x === cell.x && (marker$ | async)?.y === cell.y"
-             [class.bg-accent-400]="(currMarker$ | async)?.x === cell.x && (currMarker$ | async)?.y === cell.y"
-             [class.bg-accent-600]="(nextMarker$ | async)?.x === cell.x && (nextMarker$ | async)?.y === cell.y"
+        <div class="border b-primary" [class.bt-1]="cell.grid.bt" [class.bb-1]="cell.grid.bb"
+             [class.bl-1]="cell.grid.bl" [class.br-1]="cell.grid.br" style="box-sizing: border-box"
+             [class.bg-warn]="(scanner$ | async) === cell.grid.y"
+             [class.bg-warn-400]="(startMarker$ | async)?.grid?.x === cell.grid.x && (startMarker$ | async)?.grid?.y
+                === cell.grid.y"
+             [class.bg-warn-600]="(finalMarker$ | async)?.grid?.x === cell.grid.x && (finalMarker$ | async)?.grid?.y
+                === cell.grid.y"
+             [class.bg-accent]="(marker$ | async)?.grid?.x === cell.grid.x && (marker$ | async)?.grid?.y
+                === cell.grid.y"
+             [class.bg-accent-400]="(currMarker$ | async)?.grid?.x === cell.grid.x && (currMarker$ | async)?.grid?.y
+                === cell.grid.y"
+             [class.bg-accent-600]="(nextMarker$ | async)?.grid?.x === cell.grid.x && (nextMarker$ | async)?.grid?.y
+                 === cell.grid.y"
              *ngFor="let cell of cells$ | async"></div>
     </mat-card-content>
 </mat-card>
+<ng-template #view>
+    <div mat-dialog-title class="d-flex align-items-center sx-50 mb-50">
+        <span class="mat-title flex-fill my-0">View</span>
+        <button mat-icon-button mat-dialog-close=""><mat-icon>close</mat-icon></button>
+    </div>
+    <div mat-dialog-content class="border bt-1 bb-1 bl-1 br-1 b-primary w-100 mx-0 px-0"
+         style="display: grid;place-items: stretch;height: calc(100vh - 40px - 0.5rem);max-height: 100%;"
+         [style.grid-template-columns]="'repeat(' + (columns$ | async) + ', auto)'">
+        <div class="border b-primary" [class.bt-1]="grid.bt" [class.bb-1]="grid.bb"
+             [class.bl-1]="grid.bl" [class.br-1]="grid.br" style="box-sizing: border-box"
+             *ngFor="let grid of grids$ | async"></div>
+    </div>
+</ng-template>

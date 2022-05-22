@@ -33,10 +33,13 @@ export class DemoIconView implements OnDestroy, AfterViewInit {
     }
 
     ngAfterViewInit() {
-        if (this.icons$ === null) {
-            this.icons$ = of(this._service.icons);
-            this._cdr.detectChanges();
-        }
+        this._zone.runOutsideAngular(() => {
+            if (this.icons$ === null) {
+                this.icons$ = of(this._service.icons);
+            }
+
+            this._zone.run(() => this._cdr.detectChanges());
+        });
     }
 
 }

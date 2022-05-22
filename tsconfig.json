@@ -3,7 +3,7 @@
     "compileOnSave": false,
     "compilerOptions": {
         "baseUrl": "./",
-        "outDir": "./dist/demo",
+        "outDir": "./dist/electron",
         "forceConsistentCasingInFileNames": true,
         "strict": true,
         "noImplicitOverride": true,

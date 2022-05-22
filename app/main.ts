@@ -10,7 +10,6 @@ function createWindow(): BrowserWindow {
 
     const size = screen.getPrimaryDisplay().workAreaSize;
 
-    // Create the browser window.
     win = new BrowserWindow({
         x: 0,
         y: 0,
@@ -19,7 +18,7 @@ function createWindow(): BrowserWindow {
         webPreferences: {
             nodeIntegration: true,
             allowRunningInsecureContent: (serve),
-            contextIsolation: false,  // false if you want to run e2e test with Spectron
+            contextIsolation: false,
         },
     });
 
@@ -30,16 +29,8 @@ function createWindow(): BrowserWindow {
         require('electron-reloader')(module);
         win.loadURL('http://localhost:8080').then();
     } else {
-        // Path when running electron executable
-        let pathIndex = './demo/index.html';
-
-        if (fs.existsSync(path.join(__dirname, '../dist/demo/index.html'))) {
-            // Path when running electron in local folder
-            pathIndex = '../dist/demo/index.html';
-        }
-
         win.loadURL(url.format({
-            pathname: path.join(__dirname, pathIndex),
+            pathname: path.join(__dirname, '../web/index.html'),
             protocol: 'file:',
             slashes: true
         })).then();

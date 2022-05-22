@@ -1,24 +1,90 @@
 {
     "name": "electron",
-    "version": "0.0.0",
+    "homepage": "https://github.com/MrFengShui/Electron",
     "main": "app/main.js",
+    "author": {
+        "name": "MrFengShui",
+        "email": "luansongjian@gmail.com"
+    },
+    "keywords": ["Angular", "Electron"],
+    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/MrFengShui/Electron.git"
+    },
+    "version": "0.0.0",
+    "build": {
+        "asar": false,
+        "appId": "com.github.mrfengshui.electron",
+        "copyright": "MrFengShui",
+        "directories": {
+            "output": "pack"
+        },
+        "files": [
+            "**/*",
+            "!**/*.ts",
+            "!*.map",
+            "!*.js",
+            "!package.json",
+            "!package-lock.json",
+            "!angular.json",
+            "!**/.angular/",
+            "!src/",
+            "!node_modules/",
+            "!*.md",
+            "!.browserslistrc",
+            "!tsconfig.json",
+            "!tsconfig.app.json",
+            "!tsconfig.serve.json",
+            "!tsconfig.spec.json"
+        ],
+        "extraFiles": {
+            "from": "./dist",
+            "to": "./resources/app",
+            "filter": ["**/*"]
+        },
+        "productName": "electron",
+        "win": {
+            "icon": "app/logo.png",
+            "publish": {
+                "owner": "MrFengShui",
+                "private": true,
+                "provider": "github",
+                "releaseType": "release",
+                "repo": "Electron",
+                "token": "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"
+            },
+            "target": [
+                {
+                    "target": "nsis",
+                    "arch": "x64"
+                }
+            ]
+        },
+        "nsis": {
+            "allowElevation": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true,
+            "shortcutName": "Electron",
+            "oneClick": false
+        }
+    },
     "scripts": {
         "ng": "ng",
         "serve": "ng serve",
         "start": "npm-run-all -p angular:serve electron:serve",
-        "build": "npm run electron:serve-tsc && npm run angular:build",
+        "build": "npm run angular:build && npm run electron:build",
         "test": "ng test",
         "watch": "ng build --watch --configuration development",
-
-        "angular:serve": "ng serve -c web-development",
+        "angular:serve": "ng serve",
         "angular:build": "ng build",
-
-        "electron:serve": "wait-on tcp:8080 && npm run electron:serve-tsc && electron . --serve",
-        "electron:serve-tsc": "tsc -p tsconfig.serve.json"
+        "electron:serve": "wait-on tcp:8080 && tsc -p tsconfig.serve.json && electron . --serve",
+        "electron:build": "tsc -p tsconfig.serve.json && electron-builder --win"
     },
-    "private": true,
     "dependencies": {
         "@angular/animations": "~13.1.0",
+        "@angular/cdk": "^13.3.7",
         "@angular/common": "~13.1.0",
         "@angular/compiler": "~13.1.0",
         "@angular/core": "~13.1.0",
