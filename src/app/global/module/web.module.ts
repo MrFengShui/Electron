@@ -1,6 +1,7 @@
 import {NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {TranslocoModule} from "@ngneat/transloco";
 
 import {GlobalMaterialModule} from "./material.module";
 
@@ -12,7 +13,7 @@ import {DemoSortView} from "../../web/sort/sort.component";
 
 import {DurationPipe} from "../pipe/duration.pipe";
 import {MazeStatusPipe} from "../../web/maze/maze.pipe";
-import {SortStatusPipe} from "../../web/sort/sort.pipe";
+import {SortOrderPipe, SortStatusPipe} from "../../web/sort/sort.pipe";
 
 @NgModule({
     declarations: [
@@ -23,13 +24,14 @@ import {SortStatusPipe} from "../../web/sort/sort.pipe";
         DemoSortView,
         DurationPipe,
         MazeStatusPipe,
+        SortOrderPipe,
         SortStatusPipe
     ],
     imports: [
         CommonModule,
-        CommonModule,
         FormsModule,
         ReactiveFormsModule,
+        TranslocoModule,
         GlobalMaterialModule
     ],
     exports: [
@@ -40,6 +42,7 @@ import {SortStatusPipe} from "../../web/sort/sort.pipe";
         DemoSortView,
         DurationPipe,
         MazeStatusPipe,
+        SortOrderPipe,
         SortStatusPipe
     ]
 })

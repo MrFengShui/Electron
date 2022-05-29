@@ -8,7 +8,7 @@ import {DemoMazeSolveView} from "../../web/maze/solve.component";
 import {DemoSortView} from "../../web/sort/sort.component";
 
 const routes: Routes = [
-    {path: '', redirectTo: 'demo/sort', pathMatch: 'full'},
+    {path: '', redirectTo: 'demo/icon', pathMatch: 'full'},
     {path: 'demo/icon', component: DemoIconView},
     {path: 'demo/maze/generate', component: DemoMazeGenerateView},
     {path: 'demo/maze/solve', component: DemoMazeSolveView},

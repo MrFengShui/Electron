@@ -1,7 +1,9 @@
-<mat-grid-list cols="5" gutterSize="1rem" rowHeight="1:1" class="demo-icon-view-wrapper">
+<mat-grid-list cols="8" gutterSize="1rem" rowHeight="1:1" class="demo-icon-view-wrapper">
     <mat-grid-tile class="mat-elevation-z2 bg-primary" *ngFor="let icon of icons$ | async">
-        <mat-grid-tile-header>{{icon.replace('.svg', '')}}</mat-grid-tile-header>
-        <mat-icon [svgIcon]="icon.replace('.svg', '')" class="mt-300"
-                  style="width: 3rem;height: 3rem;"></mat-icon>
+        <button mat-button [matTooltip]="('DEMO.ICON.COPY' | transloco) + ': ' + icon.replace('.svg', '')"
+                class="w-100 h-100">
+            <mat-icon [svgIcon]="icon.replace('.svg', '')" style="width: 3rem;height: 3rem;"></mat-icon>
+        </button>
     </mat-grid-tile>
 </mat-grid-list>
+

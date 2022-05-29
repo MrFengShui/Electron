@@ -17,8 +17,8 @@ import {BehaviorSubject, Subject, Subscription, timer} from "rxjs";
 import {
     BinaryTreeDirection,
     DemoMazeGenerateAlgorithmService,
-    MazeCellFullType,
-    MazeCellLessType,
+    MazeCellType,
+    MazeGridType,
     SpeedType
 } from "./maze.service";
 
@@ -32,7 +32,7 @@ interface MazeGenerationMeta {
     cols: number;
     rows: number;
     time: number;
-    data: MazeCellLessType[];
+    data: MazeGridType[];
 
 }
 
@@ -49,13 +49,13 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
 
     @HostBinding('class') class: string = 'demo-maze-view';
 
-    cells$: Subject<MazeCellFullType[]> = new BehaviorSubject<MazeCellFullType[]>([]);
-    grids$: Subject<MazeCellLessType[]> = new BehaviorSubject<MazeCellLessType[]>([]);
-    marker$: Subject<MazeCellFullType | undefined> = new BehaviorSubject<MazeCellFullType | undefined>(undefined);
-    currMarker$: Subject<MazeCellFullType | undefined> = new BehaviorSubject<MazeCellFullType | undefined>(undefined);
-    nextMarker$: Subject<MazeCellFullType | undefined> = new BehaviorSubject<MazeCellFullType | undefined>(undefined);
-    startMarker$: Subject<MazeCellFullType | undefined> = new BehaviorSubject<MazeCellFullType | undefined>(undefined);
-    finalMarker$: Subject<MazeCellFullType | undefined> = new BehaviorSubject<MazeCellFullType | undefined>(undefined);
+    cells$: Subject<MazeCellType[]> = new BehaviorSubject<MazeCellType[]>([]);
+    grids$: Subject<MazeGridType[]> = new BehaviorSubject<MazeGridType[]>([]);
+    marker$: Subject<MazeCellType | undefined> = new BehaviorSubject<MazeCellType | undefined>(undefined);
+    currMarker$: Subject<MazeCellType | undefined> = new BehaviorSubject<MazeCellType | undefined>(undefined);
+    nextMarker$: Subject<MazeCellType | undefined> = new BehaviorSubject<MazeCellType | undefined>(undefined);
+    startMarker$: Subject<MazeCellType | undefined> = new BehaviorSubject<MazeCellType | undefined>(undefined);
+    finalMarker$: Subject<MazeCellType | undefined> = new BehaviorSubject<MazeCellType | undefined>(undefined);
     scanner$: Subject<number | undefined> = new BehaviorSubject<number | undefined>(undefined);
     columns$: Subject<number> = new BehaviorSubject<number>(0);
     shuffle$: Subject<boolean> = new BehaviorSubject<boolean>(false);
@@ -66,30 +66,28 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
     select$: Subject<string> = new BehaviorSubject<string>('');
 
     readonly nameToggles: ToggleModel<string>[] = [
-        {code: 'none', text: '--- Select One ---'},
-        {code: 'ab', text: 'Aldous Broder'},
-        {code: 'btnw', text: 'Binary Tree By NW'},
-        {code: 'btne', text: 'Binary Tree By NE'},
-        {code: 'btsw', text: 'Binary Tree By SW'},
-        {code: 'btse', text: 'Binary Tree By SE'},
-        {code: 'eller', text: 'Eller'},
-        {code: 'grow', text: 'Grow Tree'},
-        {code: 'hunt', text: 'Hunt Kill'},
-        {code: 'kruskal', text: 'Kruskal'},
-        {code: 'prim', text: 'Prim'},
-        {code: 'rbt', text: 'Random Back Tracker'},
-        {code: 'rdbt', text: 'Random Double Back Tracker'},
-        {code: 'rd', text: 'Random Divider'},
-        {code: 'sw', text: 'Side Winder'},
-        {code: 'walson', text: 'Walson'}
+        {code: 'ab', text: 'DEMO.MAZEG.NAME.AB'},
+        {code: 'btnw', text: 'DEMO.MAZEG.NAME.BTNW'},
+        {code: 'btne', text: 'DEMO.MAZEG.NAME.BTSW'},
+        {code: 'btsw', text: 'DEMO.MAZEG.NAME.BTNE'},
+        {code: 'btse', text: 'DEMO.MAZEG.NAME.BTSE'},
+        {code: 'eller', text: 'DEMO.MAZEG.NAME.ELLER'},
+        {code: 'grow', text: 'DEMO.MAZEG.NAME.GT'},
+        {code: 'hunt', text: 'DEMO.MAZEG.NAME.HK'},
+        {code: 'kruskal', text: 'DEMO.MAZEG.NAME.KRUSKAL'},
+        {code: 'prim', text: 'DEMO.MAZEG.NAME.PRIM'},
+        {code: 'rbt', text: 'DEMO.MAZEG.NAME.RBT'},
+        {code: 'rdbt', text: 'DEMO.MAZEG.NAME.RDBT'},
+        {code: 'rd', text: 'DEMO.MAZEG.NAME.RD'},
+        {code: 'sw', text: 'DEMO.MAZEG.NAME.SW'},
+        {code: 'walson', text: 'DEMO.MAZEG.NAME.WALSON'}
     ];
-    readonly speedToggles: ToggleModel<SpeedType | 'none'>[] = [
-        {code: 'none', text: '--- Select One ---'},
-        {code: 500, text: 'Extra Slow'},
-        {code: 250, text: 'Slow'},
-        {code: 100, text: 'Normal'},
-        {code: 10, text: 'Fast'},
-        {code: 1, text: 'Extra Fast'},
+    readonly speedToggles: ToggleModel<SpeedType>[] = [
+        {code: 500, text: 'DEMO.PUBLIC.DELAY.EXTRA.SLOW'},
+        {code: 250, text: 'DEMO.PUBLIC.DELAY.SLOW'},
+        {code: 100, text: 'DEMO.PUBLIC.DELAY.NORMAL'},
+        {code: 10, text: 'DEMO.PUBLIC.DELAY.FAST'},
+        {code: 1, text: 'DEMO.PUBLIC.DELAY.EXTRA.FAST'},
     ];
     readonly headers: string[] = ['flag', 'code', 'name', 'cols', 'rows', 'time', 'data'];
 
@@ -98,7 +96,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
     select!: SelectionModel<MazeGenerationMeta>;
 
     private anchor: HTMLAnchorElement | null = null;
-    private cells: MazeCellFullType[] = [];
+    private cells: MazeCellType[] = [];
     private time: number = 0;
 
     constructor(
@@ -123,13 +121,6 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
                     Validators.min(5), Validators.max(60)])
         });
         this.source = new MatTableDataSource<MazeGenerationMeta>([]);
-        // this.source = new MatTableDataSource<MazeGenerationMeta>(Array.from({length: 128})
-        //     .map((_, index) =>
-        //         ({
-        //             flag: Math.random() <= 0.5, code: index + 1, name: `Algorithm ${index + 1}`,
-        //             cols: 60, rows: 30, time: 0, data: []
-        //         })
-        //     ));
         this.select = new SelectionModel<MazeGenerationMeta>(true, []);
     }
 
@@ -184,7 +175,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
         let array: MazeGenerationMeta[] = this.source.data;
         array.push({
             flag: false, code: this.source.data.length + 1, name: this.fetch(this.group.value['nameCtrl']), cols, rows,
-            time: this.time, data: this.cells.map<MazeCellLessType>(cell =>
+            time: this.time, data: this.cells.map<MazeGridType>(cell =>
                 ({x: cell.grid.x, y: cell.grid.y, bt: cell.grid.bt, bb: cell.grid.bb, bl: cell.grid.bl, br: cell.grid.br}))
         });
         this.source.data = array;
@@ -507,7 +498,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
         }
     }
 
-    private static merge(currCell: MazeCellFullType, nextCell: MazeCellFullType): void {
+    private static merge(currCell: MazeCellType, nextCell: MazeCellType): void {
         if (currCell.grid.y + 1 === nextCell.grid.y) {
             currCell.grid.bb = false;
             nextCell.grid.bt = false;

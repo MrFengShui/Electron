@@ -6,7 +6,9 @@ import { Pipe, PipeTransform } from "@angular/core";
 export class DurationPipe implements PipeTransform {
 
     transform(value: number | null, formatter: 'long' | 'short' = 'long'): string {
-        if (value) {
+        if (value === 0 || value === null) {
+            return formatter === 'short' ? '00:00' : '00:00:00';
+        } else {
             let hour: number = 0;
             let minute: number = 0;
             let second: number;
@@ -28,8 +30,6 @@ export class DurationPipe implements PipeTransform {
                 case 'long': return `${DurationPipe.format(hour)}:${DurationPipe.format(minute)}:${DurationPipe.format(second)}`;
                 case 'short': return `${DurationPipe.format(minute)}:${DurationPipe.format(second)}`;
             }
-        } else {
-            return formatter === 'short' ? '00:00' : '00:00:00';
         }
     }
 

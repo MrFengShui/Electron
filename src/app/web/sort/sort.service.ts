@@ -31,8 +31,8 @@ export type DualPivotType = { fst: number, snd: number };
 export type DataType = { value: number, ratio: number, digit?: number };
 export type RangeType = { lhs: number, rhs: number };
 export type OrderType = 'ascent' | 'descent';
-export type SpeedType = 5 | 10 | 100 | 250 | 500;
-export type BaseType = 2 | 4 | 8 | 10 | 16;
+export type SpeedType = 1 | 10 | 100 | 250 | 500;
+export type BaseType = 2 | 8 | 10 | 16;
 
 @Injectable()
 export class DemoSortUtilityService {

@@ -9,6 +9,7 @@ import {
     OnInit
 } from "@angular/core";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
+import {MatTableDataSource} from "@angular/material/table";
 import {BehaviorSubject, Subject, Subscription, timer} from "rxjs";
 
 import {
@@ -17,6 +18,19 @@ import {
 } from "./sort.service";
 
 import {ToggleModel} from "../../global/model/global.model";
+
+interface SortMeta {
+
+    code: number;
+    name: string;
+    swap: number;
+    auxc: number;
+    size: number;
+    time: number;
+    delay: SpeedType;
+    order: OrderType;
+
+}
 
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,102 +60,109 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     phase$: Subject<0 | 1 | 2> = new BehaviorSubject<0 | 1 | 2>(0);
     select$: Subject<string> = new BehaviorSubject<string>('');
 
-    nameGroups: Array<{ label: string, toggles: ToggleModel<string>[] }> = [
+    readonly nameGroups: Array<{ label: string, toggles: ToggleModel<string>[] }> = [
         {
-            label: 'Comparison Sort',
+            label: 'DEMO.SORT.TYPE.COMPARE',
             toggles: [
-                {code: 'bubble', text: 'Bubble Sort'},
-                {code: 'bubble-opt', text: 'Optimized Bubble Sort'},
-                {code: 'cocktail', text: 'Cock Tail Sort'},
-                {code: 'combo', text: 'Combo Sort'},
-                {code: 'cycle', text: 'Cycle Sort'},
-                {code: 'exchange', text: 'Exchange Sort'},
-                {code: 'heap', text: 'Heap Sort'},
-                {code: 'insert', text: 'Insertion Sort'},
-                {code: 'insert-bi', text: 'Binary Insertion Sort'},
-                {code: 'intro', text: 'Introspective Sort'},
-                {code: 'merge-bu', text: 'Merge Sort By Bottom-Up'},
-                {code: 'merge-td', text: 'Merge Sort By Top-Down'},
-                {code: 'merge-4way', text: 'Merge Sort By 4-Way'},
-                {code: 'merge-ip', text: 'Merge Sort By In-Place'},
-                {code: 'odd-even', text: 'Odd-Even Sort'},
-                {code: 'quick', text: 'Quick Sort'},
-                {code: 'quick-2way', text: 'Quick Sort in 2-Way'},
-                {code: 'quick-3way', text: 'Quick Sort in 3-Way'},
-                {code: 'quick-dp', text: 'Quick Sort By Dual Pivot'},
-                {code: 'select', text: 'Selection Sort'},
-                {code: 'select-db', text: 'Double Selection Sort'},
-                {code: 'shell', text: 'Shell Sort'},
-                {code: 'slow', text: 'Slow Sort'},
-                {code: 'strand', text: 'Strand Sort'},
-                {code: 'tim-bu', text: 'Tim Sort By Bottom-Up'},
-                {code: 'tim-td', text: 'Tim Sort By Top-Down'},
-                {code: 'tour', text: 'Tournament Sort'}
+                {code: 'bubble', text: 'DEMO.SORT.NAME.BUBBLE'},
+                {code: 'bubble-opt', text: 'DEMO.SORT.NAME.BUBBLE.OPT'},
+                {code: 'cocktail', text: 'DEMO.SORT.NAME.COCKTAIL'},
+                {code: 'cocktail-opt', text: 'DEMO.SORT.NAME.COCKTAIL.OPT'},
+                {code: 'combo', text: 'DEMO.SORT.NAME.COMBO'},
+                {code: 'cycle', text: 'DEMO.SORT.NAME.CYCLE'},
+                {code: 'exchange', text: 'DEMO.SORT.NAME.EXCHANGE'},
+                {code: 'heap', text: 'DEMO.SORT.NAME.HEAP'},
+                {code: 'insert', text: 'DEMO.SORT.NAME.INSERT'},
+                {code: 'insert-bi', text: 'DEMO.SORT.NAME.INSERT.BST'},
+                {code: 'intro', text: 'DEMO.SORT.NAME.INTRO'},
+                {code: 'merge-bu', text: 'DEMO.SORT.NAME.MERGE.BU'},
+                {code: 'merge-td', text: 'DEMO.SORT.NAME.MERGE.TD'},
+                {code: 'merge-way', text: 'DEMO.SORT.NAME.MERGE.WAY'},
+                {code: 'merge-ip', text: 'DEMO.SORT.NAME.MERGE.IP'},
+                {code: 'odd-even', text: 'DEMO.SORT.NAME.ODD-EVEN'},
+                {code: 'quick', text: 'DEMO.SORT.NAME.QUICK'},
+                {code: 'quick-2way', text: 'DEMO.SORT.NAME.QUICK.2WAY'},
+                {code: 'quick-3way', text: 'DEMO.SORT.NAME.QUICK.3WAY'},
+                {code: 'quick-dp', text: 'DEMO.SORT.NAME.QUICK.DP'},
+                {code: 'select', text: 'DEMO.SORT.NAME.SELECT'},
+                {code: 'select-db', text: 'DEMO.SORT.NAME.SELECT.DOUBLE'},
+                {code: 'shell', text: 'DEMO.SORT.NAME.SHELL'},
+                {code: 'strand', text: 'DEMO.SORT.NAME.STRAND'},
+                {code: 'tim-bu', text: 'DEMO.SORT.NAME.TIMSORT.BU'},
+                {code: 'tim-td', text: 'DEMO.SORT.NAME.TIMSORT.TD'},
+                {code: 'tour', text: 'DEMO.SORT.NAME.TOUR'}
             ]
         },
         {
-            label: 'Distribution Sort',
+            label: 'DEMO.SORT.TYPE.DISTRIBUTE',
             toggles: [
-                {code: 'bst', text: 'Binary Search Tree Sort'},
-                {code: 'bucket-2', text: 'Bucket Sort in Base 2'},
-                {code: 'bucket-8', text: 'Bucket Sort in Base 8'},
-                {code: 'bucket-10', text: 'Bucket Sort in Base 10'},
-                {code: 'bucket-16', text: 'Bucket Sort in Base 16'},
-                {code: 'count', text: 'Counting Sort'},
-                {code: 'flash', text: 'Flash Sort'},
-                {code: 'pigeon', text: 'Pigeon Hole Sort'},
-                {code: 'patience', text: 'Patience Sort'},
-                {code: 'radix-lsd-2', text: 'LSD Radix Sort in Base 2'},
-                {code: 'radix-lsd-4', text: 'LSD Radix Sort in Base 4'},
-                {code: 'radix-lsd-8', text: 'LSD Radix Sort in Base 8'},
-                {code: 'radix-lsd-10', text: 'LSD Radix Sort in Base 10'},
-                {code: 'radix-lsd-16', text: 'LSD Radix Sort in Base 16'},
-                {code: 'radix-msd-2', text: 'MSD Radix Sort in Base 2'},
-                {code: 'radix-msd-4', text: 'MSD Radix Sort in Base 4'},
-                {code: 'radix-msd-8', text: 'MSD Radix Sort in Base 8'},
-                {code: 'radix-msd-10', text: 'MSD Radix Sort in Base 10'},
-                {code: 'radix-msd-16', text: 'MSD Radix Sort in Base 16'}
+                {code: 'bst', text: 'DEMO.SORT.NAME.BST'},
+                {code: 'bucket-2', text: 'DEMO.SORT.NAME.BUCKET.BIN'},
+                {code: 'bucket-8', text: 'DEMO.SORT.NAME.BUCKET.OCT'},
+                {code: 'bucket-10', text: 'DEMO.SORT.NAME.BUCKET.DEC'},
+                {code: 'bucket-16', text: 'DEMO.SORT.NAME.BUCKET.HEX'},
+                {code: 'count', text: 'DEMO.SORT.NAME.COUNT'},
+                {code: 'flash', text: 'DEMO.SORT.NAME.FLASH'},
+                {code: 'pigeon', text: 'DEMO.SORT.NAME.PIGEON'},
+                {code: 'patience', text: 'DEMO.SORT.NAME.PATIENT'},
+                {code: 'radix-lsd-2', text: 'DEMO.SORT.NAME.RADIX.LSD.BIN'},
+                {code: 'radix-lsd-8', text: 'DEMO.SORT.NAME.RADIX.LSD.OCT'},
+                {code: 'radix-lsd-10', text: 'DEMO.SORT.NAME.RADIX.LSD.DEC'},
+                {code: 'radix-lsd-16', text: 'DEMO.SORT.NAME.RADIX.LSD.HEX'},
+                {code: 'radix-msd-2', text: 'DEMO.SORT.NAME.RADIX.MSD.BIN'},
+                {code: 'radix-msd-8', text: 'DEMO.SORT.NAME.RADIX.MSD.OCT'},
+                {code: 'radix-msd-10', text: 'DEMO.SORT.NAME.RADIX.MSD.DEC'},
+                {code: 'radix-msd-16', text: 'DEMO.SORT.NAME.RADIX.MSD.HEX'}
             ]
         },
         {
-            label: 'Other Sort',
+            label: 'DEMO.SORT.TYPE.OTHER',
             toggles: [
-                {code: 'bitonic-bu', text: 'Bitonic Sort By Bottom-Up'},
-                {code: 'bitonic-td', text: 'Bitonic Sort By Top-Down'},
-                {code: 'bogo', text: 'Bogo Sort'},
-                {code: 'bogo-bubble', text: 'Bubble Bogo Sort'},
-                {code: 'bogo-ct', text: 'Cock Tail Bogo Sort'},
-                {code: 'bozo', text: 'Bozo Sort'},
-                {code: 'bozo-less', text: 'Less Bozo Sort'},
-                {code: 'gnome', text: 'Gnome Sort'},
-                {code: 'gnome-opt', text: 'Optimized Gnome Sort'},
-                {code: 'gravity', text: 'Gravity Sort'},
-                {code: 'oem-bu', text: 'OE Merge Sort By Bottom-Up'},
-                {code: 'oem-td', text: 'OE Merge Sort By Top-Down'},
-                {code: 'pairwise-bu', text: 'Pairwise Sort By Bottom-Up'},
-                {code: 'pancake', text: 'Pancake Sort'},
-                {code: 'slow', text: 'Slow Sort'},
-                {code: 'stooge', text: 'Stooge Sort'}
+                {code: 'bitonic-bu', text: 'DEMO.SORT.NAME.BITONIC.BU'},
+                {code: 'bitonic-td', text: 'DEMO.SORT.NAME.BITONIC.TD'},
+                {code: 'bogo', text: 'DEMO.SORT.NAME.BOGO'},
+                {code: 'bogo-bubble', text: 'DEMO.SORT.NAME.BOGO.BUBLE'},
+                {code: 'bogo-ct', text: 'DEMO.SORT.NAME.BOGO.COCKTAIL'},
+                {code: 'bozo', text: 'DEMO.SORT.NAME.BOZO'},
+                {code: 'bozo-less', text: 'DEMO.SORT.NAME.BOZO.LESS'},
+                {code: 'gnome', text: 'DEMO.SORT.NAME.GNOME'},
+                {code: 'gnome-opt', text: 'DEMO.SORT.NAME.GNOME.OPT'},
+                {code: 'gravity', text: 'DEMO.SORT.NAME.GRAVITY'},
+                {code: 'oem-bu', text: 'DEMO.SORT.NAME.ODD-EVEN.MERGE.BU'},
+                {code: 'oem-td', text: 'DEMO.SORT.NAME.ODD-EVEN.MERGE.TD'},
+                {code: 'pairwise-bu', text: 'DEMO.SORT.NAME.PAIRWISE.BU'},
+                {code: 'pairwise-td', text: 'DEMO.SORT.NAME.PAIRWISE.TD'},
+                {code: 'pancake', text: 'DEMO.SORT.NAME.PANCAKE'},
+                {code: 'slow', text: 'DEMO.SORT.NAME.SLOW'},
+                {code: 'stooge', text: 'DEMO.SORT.NAME.STOOGE'}
             ]
         }
     ];
-    speedToggles: ToggleModel<SpeedType | 'none'>[] = [
-        {code: 'none', text: '--- Select One ---'},
-        {code: 500, text: 'Extra Slow'},
-        {code: 250, text: 'Slow'},
-        {code: 100, text: 'Normal'},
-        {code: 10, text: 'Fast'},
-        {code: 5, text: 'Extra Fast'}
+    readonly speedToggles: ToggleModel<SpeedType>[] = [
+        {code: 500, text: 'DEMO.PUBLIC.DELAY.EXTRA.SLOW'},
+        {code: 250, text: 'DEMO.PUBLIC.DELAY.SLOW'},
+        {code: 100, text: 'DEMO.PUBLIC.DELAY.NORMAL'},
+        {code: 10, text: 'DEMO.PUBLIC.DELAY.FAST'},
+        {code: 1, text: 'DEMO.PUBLIC.DELAY.EXTRA.FAST'}
     ];
-    orderToggles: ToggleModel<OrderType | 'none'>[] = [
-        {code: 'none', text: '--- Select One ---'},
-        {code: 'ascent', text: 'Ascent'},
-        {code: 'descent', text: 'Descent'}
+    readonly orderToggles: ToggleModel<OrderType>[] = [
+        {code: 'ascent', text: 'DEMO.SORT.ORDER.ASCENT'},
+        {code: 'descent', text: 'DEMO.SORT.ORDER.DESCENT'}
     ];
+    readonly headers: string[] = ['code', 'name', 'swap', 'auxc', 'delay', 'order', 'size', 'time'];
 
     group!: FormGroup;
+    source!: MatTableDataSource<SortMeta>;
 
+    // private metas: SortMeta[] = Array.from({length: 16}).map((_, index) =>
+    //     ({code: index + 1, name: `Algorithm ${index + 1}`,
+    //         swap: Math.floor(Math.random() * 1234567890), auxc: Math.floor(Math.random() * 1234567890),
+    //         size: Math.floor(Math.random() * 2048), time: 0, delay: 1, order: 'ascent'}));
+    private metas: SortMeta[] = [];
     private dataset: DataType[] = [];
+    private swap!: number;
+    private auxc!: number;
+    private time!: number;
 
     constructor(
         private _builder: FormBuilder,
@@ -162,6 +183,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             orderCtrl: new FormControl('none', [Validators.required]),
             sizeCtrl: new FormControl(64, [Validators.required])
         });
+        this.source = new MatTableDataSource<SortMeta>(this.metas);
     }
 
     ngAfterViewInit() {
@@ -189,7 +211,13 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
         this.nextIndex$.complete();
         this.lhsNextIndex$.complete();
         this.rhsPivotIndex$.complete();
+        this.swapCount$.complete();
+        this.auxCount$.complete();
         this.timer$.complete();
+        this.columns$.complete();
+        this.shown$.complete();
+        this.phase$.complete();
+        this.select$.complete();
     }
 
     handleToggleRunAction(): void {
@@ -207,9 +235,15 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
                     this.lhsPivotIndex$.next(value.lhsPivotIndex);
                     this.rhsPivotIndex$.next(value.rhsPivotIndex);
                 }).then(() => {
+                    this.time = 0;
+                    this.swap = 0;
+                    this.auxc = 0;
                     this.phase$.next(2);
                     let subscription = timer(0, 1000)
-                        .subscribe(value => this.timer$.next(value));
+                        .subscribe(value => {
+                            this.time = value;
+                            this.timer$.next(value);
+                        });
                     let name: string = this.group.value['nameCtrl'];
                     let speed: SpeedType = this.group.value['speedCtrl'];
                     let order: OrderType = this.group.value['orderCtrl'];
@@ -234,6 +268,17 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             this.dataset$.next(this.dataset);
             this.formEnableDisable(true);
         }
+    }
+
+    handleToggleCloseAction(): void {
+        let name: string = this.fetch(this.group.value['nameCtrl']);
+        let size: number = coerceNumberProperty(this.fetch(this.group.value['sizeCtrl']));
+        let delay: SpeedType = this.group.value['speedCtrl'];
+        let order: OrderType = this.group.value['orderCtrl'];
+        let array: SortMeta[] = this.source.data;
+        array.push({code: array.length + 1, name, swap: this.swap, auxc: this.auxc, size, time: this.time, delay, order});
+        this.source.data = array;
+        this.shown$.next(false);
     }
 
     private fetch(code: string): string {
@@ -291,8 +336,8 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             case 'bucket-16':
                 this.execBucketSort(16, speed, order, subscription);
                 break;
-            case 'cocktail':
-                this.execCockTailSort(speed, order, subscription);
+            case 'cocktail-opt':
+                this.execCockTailOptimalSort(speed, order, subscription);
                 break;
             case 'combo':
                 this.execComboSort(speed, order, subscription);
@@ -336,7 +381,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             case 'merge-td':
                 this.execMergeTDSort(speed, order, subscription);
                 break;
-            case 'merge-4way':
+            case 'merge-way':
                 this.execMerge4WaySort(speed, order, subscription);
                 break;
             case 'merge-ip':
@@ -378,9 +423,6 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             case 'radix-lsd-2':
                 this.execRadixLSDSort(2, speed, order, subscription);
                 break;
-            case 'radix-lsd-4':
-                this.execRadixLSDSort(4, speed, order, subscription);
-                break;
             case 'radix-lsd-8':
                 this.execRadixLSDSort(8, speed, order, subscription);
                 break;
@@ -392,9 +434,6 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
                 break;
             case 'radix-msd-2':
                 this.execRadixMSDSort(2, speed, order, subscription);
-                break;
-            case 'radix-msd-4':
-                this.execRadixMSDSort(4, speed, order, subscription);
                 break;
             case 'radix-msd-8':
                 this.execRadixMSDSort(8, speed, order, subscription);
@@ -518,6 +557,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
 
     private execBubbleSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
         this._dcss.sortByBubble(this.dataset, speed, order, value => {
+            this.swap = value.swapCount as number;
             this.dataset$.next(value.dataset);
             this.currIndex$.next(value.currIndex);
             this.nextIndex$.next(value.nextIndex);
@@ -527,6 +567,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
 
     private execBubbleOptimalSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
         this._dcss.sortByBubbleOptimal(this.dataset, speed, order, value => {
+            this.swap = value.swapCount as number;
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);
             this.currIndex$.next(value.currIndex);
@@ -546,7 +587,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
         }).then(() => this.execComplete(this.dataset.length, speed, subscription));
     }
 
-    private execCockTailSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
+    private execCockTailOptimalSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
         this._dcss.sortByCockTail(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.pivotIndex$.next(value.pivotIndex);

@@ -13,7 +13,7 @@
     $txtcolor: map.get($foreground, "base");
 
     .bg-base {
-        background-color: map.get($background, "background");
+        background-color: $bgcolor;
     }
 
     .bg-none {
@@ -27,7 +27,7 @@
     );
     @each $key, $value in $list {
         .bg-#{$key} {
-            background-color: mat.get-color-from-palette($value);
+            background-color: mat.get-color-from-palette($value) !important;
         }
 
         .txt-#{$key} {
@@ -60,7 +60,7 @@
 
         @for $i from 1 through 9 {
             .bg-#{$key}-#{$i * 100} {
-                background-color: mat.get-color-from-palette($value, $i * 100);
+                background-color: mat.get-color-from-palette($value, $i * 100) !important;
             }
 
             .txt-#{$key}-#{$i * 100} {
@@ -73,9 +73,11 @@
         @each $key, $value in $list {
             &.overflow-#{$key} {
                 &::-webkit-scrollbar-thumb {
-                    background-color: rgba(mat.get-color-from-palette($value), 0.25);
+                    background-color: transparent;
+                }
 
-                    &:hover {
+                &:hover {
+                    &::-webkit-scrollbar-thumb {
                         background-color: mat.get-color-from-palette($value);
                     }
                 }
@@ -85,34 +87,47 @@
         @for $i from 1 through 9 {
             &.overflow-primary-#{$i * 100} {
                 &::-webkit-scrollbar-thumb {
-                    $bgcolor: mat.get-color-from-palette($primary, $i * 100);
-                    background-color: rgba($bgcolor, 0.25);
+                    background-color: transparent;
+                }
 
-                    &:hover {
-                        background-color: $bgcolor;
+                &:hover {
+                    &::-webkit-scrollbar-thumb {
+                        background-color: mat.get-color-from-palette($primary, $i * 100);
                     }
                 }
             }
 
             &.overflow-accent-#{$i * 100} {
                 &::-webkit-scrollbar-thumb {
-                    $bgcolor: mat.get-color-from-palette($accent, $i * 100);
+                    background-color: transparent;
+                }
 
-                    &:hover {
-                        background-color: $bgcolor;
+                &:hover {
+                    &::-webkit-scrollbar-thumb {
+                        background-color: mat.get-color-from-palette($accent, $i * 100);
                     }
                 }
             }
 
             &.overflow-warn-#{$i * 100} {
                 &::-webkit-scrollbar-thumb {
-                    $bgcolor: mat.get-color-from-palette($warn, $i * 100);
+                    background-color: transparent;
+                }
 
-                    &:hover {
-                        background-color: $bgcolor;
+                &:hover {
+                    &::-webkit-scrollbar-thumb {
+                        background-color: mat.get-color-from-palette($warn, $i * 100);
                     }
                 }
             }
         }
+    }
+
+    .demo-maze-mark {
+        background-color: mat.get-color-from-palette($warn, 400);
+    }
+
+    .demo-maze-path {
+        background-color: mat.get-color-from-palette($warn, 600);
     }
 }

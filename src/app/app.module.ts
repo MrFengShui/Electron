@@ -6,6 +6,7 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
 import {GlobalMaterialModule} from "./global/module/material.module";
 import {GlobalRouteModule} from './global/module/route.module';
+import {GlobalTranslateModule} from "./global/module/translate.module";
 import {GlobalWebModule} from "./global/module/web.module";
 
 import {AppComponent} from './app.component';
@@ -21,7 +22,8 @@ import {AppComponent} from './app.component';
         HttpClientModule,
         GlobalMaterialModule,
         GlobalRouteModule,
-        GlobalWebModule,
+        GlobalTranslateModule,
+        GlobalWebModule
     ],
     providers: [],
     bootstrap: [AppComponent]

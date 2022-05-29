@@ -3,7 +3,7 @@
         <img src="assets/image/electron-full.svg" alt="logo.svg" height="48"
              style="filter: brightness(2.0) drop-shadow(0 0 2px #212121)">
         <span class="flex-fill"></span>
-        <button mat-icon-button [matMenuTriggerFor]="tune">
+        <button mat-icon-button matTooltip="{{'DEMO.TIP.TUNE' | transloco}}" [matMenuTriggerFor]="tune">
             <mat-icon>tune</mat-icon>
         </button>
     </mat-toolbar>
@@ -12,35 +12,50 @@
             <mat-nav-list>
                 <a mat-list-item [routerLink]="link.link" routerLinkActive="bg-primary" *ngFor="let link of links">
                     <mat-icon matListIcon>{{link.icon}}</mat-icon>
-                    <span matLine>{{link.text}}</span>
+                    <span matLine>{{link.text | transloco}}</span>
                 </a>
             </mat-nav-list>
         </mat-sidenav>
-        <mat-sidenav-content class="p-100" style="box-sizing: border-box">
+        <mat-sidenav-content class="overflow overflow-y overflow-primary p-100" style="box-sizing: border-box">
             <router-outlet></router-outlet>
         </mat-sidenav-content>
     </mat-sidenav-container>
 </div>
-<mat-menu #tune="matMenu">
-    <span mat-menu-item class="d-flex align-items-center" style="width: 15rem" (click)="$event.stopPropagation()">
-        <mat-icon>{{theme ? 'dark_mode' : 'light_mode'}}</mat-icon>
-        <span class="flex-fill">{{theme ? 'Dark Mode' : 'Light Mode'}}</span>
-        <mat-slide-toggle [ngModel]="theme" (ngModelChange)="listenThemeChange($event)"></mat-slide-toggle>
+<mat-menu class="demo-menu" #tune="matMenu">
+    <span mat-menu-item class="d-flex align-items-center" (click)="$event.stopPropagation()">
+        <mat-slide-toggle [checked]="theme" labelPosition="before" class="demo-slide-toggle w-100"
+                          (change)="listenThemeChange($event)">
+            <mat-icon>{{theme ? 'dark_mode' : 'light_mode'}}</mat-icon>
+            <span>{{(theme ? 'DEMO.TUNE.MODE.DARK' : 'DEMO.TUNE.MODE.LIGHT') | transloco}}</span>
+        </mat-slide-toggle>
     </span>
     <button mat-menu-item [matMenuTriggerFor]="palette">
         <mat-icon>palette</mat-icon>
-        <span>Theme</span>
+        <span>{{'DEMO.TUNE.THEME' | transloco}}</span>
+    </button>
+    <button mat-menu-item [matMenuTriggerFor]="language">
+        <mat-icon>translate</mat-icon>
+        <span>{{'DEMO.TUNE.LOCALE' | transloco}}</span>
     </button>
 </mat-menu>
-<mat-menu #palette="matMenu">
-    <mat-radio-group color="primary" [value]="color">
-        <button mat-menu-item class="d-flex justify-content-between align-items-center" style="width: 17.5rem"
-                (click)="handleColorAction($event, toggle.color)" *ngFor="let toggle of toggles">
-            <mat-radio-button [value]="toggle.color"></mat-radio-button>
-            <span class="flex-fill mx-75">{{toggle.label}}</span>
-            <mat-icon class="mx-0" style="border-radius: 50%;width: 2rem;height: 2rem;"
-                      [ngStyle]="{'background': toggle.style}"></mat-icon>
-        </button>
+<mat-menu class="demo-menu" #language="matMenu">
+    <mat-radio-group color="primary" [value]="locale" (change)="listenLocaleChange($event)">
+        <span mat-menu-item *ngFor="let toggle of localeToggles">
+            <mat-radio-button [value]="toggle.code" class="w-100" (click)="$event.stopPropagation()">
+                {{toggle.name | transloco}}
+            </mat-radio-button>
+        </span>
+    </mat-radio-group>
+</mat-menu>
+<mat-menu class="demo-menu" #palette="matMenu">
+    <mat-radio-group color="primary" [value]="color" (change)="listenColorChange($event)">
+        <span mat-menu-item *ngFor="let toggle of paletteToggles">
+            <mat-radio-button [value]="toggle.color" class="w-100" (click)="$event.stopPropagation()">
+                <span class="w-100 mx-75">{{toggle.label | transloco}}</span>
+                <mat-icon style="border-radius: 50%;margin: auto;min-width: 2rem;min-height: 2rem;"
+                          [ngStyle]="{'background': toggle.style}"></mat-icon>
+            </mat-radio-button>
+        </span>
     </mat-radio-group>
 </mat-menu>
 <ng-template #splash>
@@ -54,8 +69,8 @@
                       style="height: 0.75rem"></mat-progress-bar>
     <div class="d-flex justify-content-between align-items-center w-100">
         <div class="d-flex flex-fill flex-col-pos sy-25">
-            <span class="mat-headline">{{tags.title}}</span>
-            <span class="mat-body-1">{{tags.subtitle}}</span>
+            <span class="mat-headline">{{tags.title | transloco}}</span>
+            <span class="mat-body-1">{{tags.subtitle | transloco}}</span>
         </div>
         <img [@BRIGHT_MORE_LESS]="(bright$ | async) ? 'more' : 'less'" src="assets/image/electron-full.svg"
              alt="electron-full" height="64" class="shadow">
