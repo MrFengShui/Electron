@@ -125,6 +125,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
                 {code: 'bogo-ct', text: 'DEMO.SORT.NAME.BOGO.COCKTAIL'},
                 {code: 'bozo', text: 'DEMO.SORT.NAME.BOZO'},
                 {code: 'bozo-less', text: 'DEMO.SORT.NAME.BOZO.LESS'},
+                {code: 'circle', text: 'DEMO.SORT.NAME.CIRCLE'},
                 {code: 'gnome', text: 'DEMO.SORT.NAME.GNOME'},
                 {code: 'gnome-opt', text: 'DEMO.SORT.NAME.GNOME.OPT'},
                 {code: 'gravity', text: 'DEMO.SORT.NAME.GRAVITY'},
@@ -181,7 +182,8 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             nameCtrl: new FormControl('none', [Validators.required]),
             speedCtrl: new FormControl('none', [Validators.required]),
             orderCtrl: new FormControl('none', [Validators.required]),
-            sizeCtrl: new FormControl(64, [Validators.required])
+            sizeCtrl: new FormControl(64,
+                [Validators.required, Validators.min(8), Validators.max(2048)])
         });
         this.source = new MatTableDataSource<SortMeta>(this.metas);
     }
@@ -335,6 +337,9 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
                 break;
             case 'bucket-16':
                 this.execBucketSort(16, speed, order, subscription);
+                break;
+            case 'circle':
+                this.execCircleSort(speed, order, subscription);
                 break;
             case 'cocktail-opt':
                 this.execCockTailOptimalSort(speed, order, subscription);
@@ -584,6 +589,15 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             this.nextIndex$.next(value.nextIndex);
             this.swapCount$.next(value.swapCount);
             this.auxCount$.next(value.auxCount);
+        }).then(() => this.execComplete(this.dataset.length, speed, subscription));
+    }
+
+    private execCircleSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
+        this._doss.sortByCircle(this.dataset, speed, order, value => {
+            this.dataset$.next(value.dataset);
+            this.currIndex$.next(value.currIndex);
+            this.nextIndex$.next(value.nextIndex);
+            this.swapCount$.next(value.swapCount);
         }).then(() => this.execComplete(this.dataset.length, speed, subscription));
     }
 

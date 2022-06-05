@@ -126,7 +126,8 @@
                     <mat-icon>save</mat-icon>
                     <span class="ml-75">{{'DEMO.PUBLIC.SAVE' | transloco}}</span>
                 </button>
-                <button mat-flat-button color="primary" class="py-25" (click)="handleToggleRunAction()">
+                <button mat-flat-button color="primary" [disabled]="(cells$ | async)?.length === 0" class="py-25"
+                        (click)="handleToggleRunAction()">
                     <mat-icon>play_circle_outline</mat-icon>
                     <span class="ml-75">{{'DEMO.PUBLIC.START' | transloco}}</span>
                 </button>
@@ -143,6 +144,10 @@
     <mat-card-title-group class="align-items-center">
         <span class="mat-title flex-fill my-0">
             {{'DEMO.PUBLIC.NAME' | transloco}}: {{select$ | async | transloco}}
+        </span>
+        <span class="mat-title flex-fill my-0">
+            {{'DEMO.PUBLIC.GRID' | transloco}}:
+            {{group.value['colsCtrl']}}&nbsp;&times;&nbsp;{{group.value['rowsCtrl']}}
         </span>
         <span class="mat-title flex-fill my-0">
             {{'DEMO.PUBLIC.STATUS' | transloco}}: {{phase$ | async | mss | transloco}}
@@ -171,17 +176,28 @@
                  === cell.grid.y"
              *ngFor="let cell of cells$ | async"></div>
     </mat-card-content>
+<!--    <mat-card-content style="height: calc(100% - 40px)">-->
+<!--        <div class="w-100 h-100" #container>-->
+<!--            <canvas [width]="container.clientWidth" [height]="container.clientHeight"-->
+<!--                    style="background-color: #000000" #canvas></canvas>-->
+<!--        </div>-->
+<!--    </mat-card-content>-->
 </mat-card>
 <ng-template #view>
     <div mat-dialog-title class="d-flex align-items-center sx-50 mb-50">
-        <span class="mat-title flex-fill my-0">{{'DEMO.MAZEG.TITLE.VIEW' | transloco}}</span>
+        <span class="mat-title flex-fill my-0">{{'DEMO.MAZE.TITLE.VIEW' | transloco}}</span>
         <button mat-icon-button mat-dialog-close=""><mat-icon>close</mat-icon></button>
     </div>
     <div mat-dialog-content class="border bt-1 bb-1 bl-1 br-1 b-primary w-100 mx-0 px-0"
          style="display: grid;place-items: stretch;height: calc(100vh - 40px - 0.5rem);max-height: 100%;"
          [style.grid-template-columns]="'repeat(' + (columns$ | async) + ', auto)'">
-        <div class="border b-primary" [class.bt-1]="grid.bt" [class.bb-1]="grid.bb"
-             [class.bl-1]="grid.bl" [class.br-1]="grid.br" style="box-sizing: border-box"
+        <div class="border b-primary" [class.bt-1]="grid.grid.bt" [class.bb-1]="grid.grid.bb"
+             [class.bl-1]="grid.grid.bl" [class.br-1]="grid.grid.br" style="box-sizing: border-box"
              *ngFor="let grid of grids$ | async"></div>
     </div>
 </ng-template>
+<!--<mat-card class="mat-elevation-z4 demo-maze-view-wrapper h-100" style="border-radius: 0">-->
+<!--    <div class="w-100 h-100" #container>-->
+<!--        <canvas [width]="width$ | async" [height]="height$ | async" #canvas></canvas>-->
+<!--    </div>-->
+<!--</mat-card>-->

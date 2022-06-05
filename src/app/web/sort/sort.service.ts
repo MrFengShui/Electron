@@ -28,7 +28,7 @@ export interface BSTNode {
 }
 
 export type DualPivotType = { fst: number, snd: number };
-export type DataType = { value: number, ratio: number, digit?: number };
+export type DataType = { value: number, ratio: number, digit?: number, exist?: boolean };
 export type RangeType = { lhs: number, rhs: number };
 export type OrderType = 'ascent' | 'descent';
 export type SpeedType = 1 | 10 | 100 | 250 | 500;
@@ -668,6 +668,97 @@ export class DemoOtherSortService {
      * @param order
      * @param callback
      */
+    public async sortByCircle(dataset: DataType[], speed: SpeedType, order: OrderType,
+                              callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let count: number = 0, flag: boolean = true;
+
+        while (flag) {
+            flag = await this.circleStep(dataset, 0, dataset.length - 1, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+        }
+
+        callback({dataset, swapCount: count});
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param lhs
+     * @param rhs
+     * @param count
+     * @param speed
+     * @param order
+     * @param callback
+     * @private
+     */
+    private async circleStep(dataset: DataType[], lhs: number, rhs: number, count: number,
+                             speed: SpeedType, order: OrderType,
+                             callback: (_value: SortReturnMeta) => void): Promise<boolean> {
+        if (lhs < rhs) {
+            let i: number = lhs, j: number = rhs, mid: number;
+            let lhsSwap: boolean, rhsSwap: boolean, swapped: boolean = false;
+
+            while (i < j) {
+                if (order === 'ascent' && dataset[i].value > dataset[j].value) {
+                    this._service.swap(dataset, i, j);
+                    swapped = true;
+                    count += 1;
+                }
+
+                if (order === 'descent' && dataset[i].value < dataset[j].value) {
+                    this._service.swap(dataset, i, j);
+                    swapped = true;
+                    count += 1;
+                }
+
+                callback({dataset, currIndex: i, nextIndex: j, swapCount: count});
+                i++;
+                j--;
+                await sleep(speed);
+            }
+
+            if (i === j) {
+                if (order === 'ascent' && dataset[i].value > dataset[j + 1].value) {
+                    count += 1;
+                    swapped = true;
+                    this._service.swap(dataset, i, j + 1);
+                    callback({dataset, currIndex: i, nextIndex: j + 1, swapCount: count});
+                }
+
+                if (order === 'descent' && dataset[i].value < dataset[j + 1].value) {
+                    count += 1;
+                    swapped = true;
+                    this._service.swap(dataset, i, j + 1);
+                    callback({dataset, currIndex: i, nextIndex: j + 1, swapCount: count});
+                }
+
+                await sleep(speed);
+            }
+
+            mid = Math.floor((rhs - lhs) * 0.5 + lhs);
+            lhsSwap = await this.circleStep(dataset, lhs, mid, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+            rhsSwap = await this.circleStep(dataset, mid + 1, rhs, count, speed, order, value => {
+                count = value.swapCount as number;
+                callback({...value, swapCount: count});
+            });
+            return swapped || lhsSwap || rhsSwap;
+        }
+
+        return false;
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param speed
+     * @param order
+     * @param callback
+     */
     public async sortByGnome(dataset: DataType[], speed: SpeedType, order: OrderType,
                              callback: (_value: SortReturnMeta) => void): Promise<void> {
         let count: number = 0, pivot: number = 0;
@@ -812,6 +903,47 @@ export class DemoOtherSortService {
      * @param order
      * @param callback
      */
+    public async sortByLibrary(dataset: DataType[], speed: SpeedType, order: OrderType,
+                               callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let array: DataType[] = await DemoOtherSortService.libRebalance(dataset,
+            Array.from({length: dataset.length * 2}), false, speed, callback);
+
+        callback({dataset});
+    }
+
+    private static async libRebalance(dataset: DataType[], array: DataType[], init: boolean, speed: SpeedType,
+                                      callback: (_value: SortReturnMeta) => void): Promise<DataType[]> {
+        let index: number = 0;
+
+        if (!init) {
+            for (let i = 0; i < array.length; i++) {
+                if (array[i].exist) {
+                    dataset[index] = {value: array[i].value, ratio: array[i].ratio};
+                    callback({dataset, pivotIndex: index});
+                    index++;
+                }
+
+                await sleep(speed);
+            }
+        }
+
+        for (let i = 0; i < dataset.length; i++) {
+            index = i + i;
+            array[index] = {value: dataset[i].value, ratio: dataset[i].ratio, exist: false};
+            array[index + 1] = {value: dataset[i].value, ratio: dataset[i].ratio, exist: true};
+            await sleep(speed);
+        }
+
+        return array;
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param speed
+     * @param order
+     * @param callback
+     */
     public async sortByOEMergeBU(dataset: DataType[], speed: SpeedType, order: OrderType,
                                  callback: (_value: SortReturnMeta) => void): Promise<void> {
         let count: number = 0;
@@ -944,7 +1076,6 @@ export class DemoOtherSortService {
                 await sleep(speed);
             }
         } else {
-            console.log('---'.repeat(Math.log2(span)), `low: ${low}`, `cnt: ${cnt}`, `gap: ${gap}`, `span: ${span}`);
             if (order === 'ascent' && dataset[low].value > dataset[low + gap].value) {
                 count += 1;
                 this._service.swap(dataset, low, low + gap);
@@ -1179,50 +1310,6 @@ export class DemoComparisonSortService {
 
     constructor(private _service: DemoSortUtilityService) {
     }
-
-    // public async sortByBlock(dataset: DataType[], speed: SpeedType, order: OrderType,
-    //                          callback: (_value: SortReturnMeta) => void): Promise<void> {
-    //     let power: number = DemoStableSortService.blockFloor(dataset.length), scale: number = dataset.length / power;
-    //     let start: number, end: number, mid: number;
-    //
-    //     for (let merge = 0; merge < power; merge += 16) {
-    //         start = merge * scale;
-    //         end = start + scale * 16;
-    //         await this.sortByInsertion(dataset, start, end - 1, 0, speed, order, callback);
-    //     }
-    //
-    //     for (let length = 16; length < power; length += length) {
-    //         for (let merge = 0; merge < power; merge += length * 2) {
-    //             start = merge * scale;
-    //             mid = (merge + length) * scale;
-    //             end = (merge + length * 2) * scale;
-    //
-    //             if (dataset[end - 1].value < dataset[start].value) {
-    //                 DemoStableSortService.blockRotate(dataset, mid - start, );
-    //             }
-    //
-    //             if (dataset[mid - 1].value > dataset[mid].value) {
-    //
-    //             }
-    //         }
-    //     }
-    // }
-    //
-    // private static blockFloor(length: number): number {
-    //     length = length | (length >> 1);
-    //     length = length | (length >> 2);
-    //     length = length | (length >> 4);
-    //     length = length | (length >> 8);
-    //     length = length | (length >> 16);
-    //     // length = length | (length >> 32);
-    //     return length - (length >> 1);
-    // }
-    //
-    // private static blockRotate(dataset: DataType[], amount: number, range: number): void {
-    //     reverse(dataset, range);
-    //     reverse(dataset, start, start + amount);
-    //     reverse(dataset, start + amount, end);
-    // }
 
     /**
      *
@@ -1719,10 +1806,10 @@ export class DemoComparisonSortService {
             });
         } else {
             if (limit === 0) {
-                // await this.sortByHeap(dataset, count, speed, order, value => {
-                //     count = value.swapCount as number;
-                //     callback({...value, swapCount: count});
-                // });
+                await this.sortByHeap(dataset, count, speed, order, value => {
+                    count = value.swapCount as number;
+                    callback({...value, swapCount: count});
+                });
                 return;
             }
 
