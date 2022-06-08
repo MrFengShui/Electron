@@ -1,6 +1,5 @@
 import {coerceBooleanProperty, coerceNumberProperty} from "@angular/cdk/coercion";
 import {
-    AfterViewInit,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
@@ -38,7 +37,7 @@ interface SortMeta {
     templateUrl: './sort.component.html',
     providers: [DemoSortUtilityService, DemoOtherSortService, DemoComparisonSortService, DemoDistributionSortService]
 })
-export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
+export class DemoSortView implements OnInit, OnDestroy {
 
     @HostBinding('class') class: string = 'demo-sort-view';
 
@@ -129,10 +128,10 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
                 {code: 'gnome', text: 'DEMO.SORT.NAME.GNOME'},
                 {code: 'gnome-opt', text: 'DEMO.SORT.NAME.GNOME.OPT'},
                 {code: 'gravity', text: 'DEMO.SORT.NAME.GRAVITY'},
+                {code: 'library', text: 'DEMO.SORT.NAME.LIBRARY'},
                 {code: 'oem-bu', text: 'DEMO.SORT.NAME.ODD-EVEN.MERGE.BU'},
                 {code: 'oem-td', text: 'DEMO.SORT.NAME.ODD-EVEN.MERGE.TD'},
-                {code: 'pairwise-bu', text: 'DEMO.SORT.NAME.PAIRWISE.BU'},
-                {code: 'pairwise-td', text: 'DEMO.SORT.NAME.PAIRWISE.TD'},
+                {code: 'pairwise', text: 'DEMO.SORT.NAME.PAIRWISE'},
                 {code: 'pancake', text: 'DEMO.SORT.NAME.PANCAKE'},
                 {code: 'slow', text: 'DEMO.SORT.NAME.SLOW'},
                 {code: 'stooge', text: 'DEMO.SORT.NAME.STOOGE'}
@@ -188,20 +187,6 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
         this.source = new MatTableDataSource<SortMeta>(this.metas);
     }
 
-    ngAfterViewInit() {
-        // let dataset: DataType[] = [
-        //     {value: 8, ratio: 0}, {value: 2, ratio: 0}, {value: 4, ratio: 0}, {value: 6, ratio: 0},
-        //     {value: 7, ratio: 0}, {value: 3, ratio: 0}, {value: 1, ratio: 0}, {value: 9, ratio: 0},
-        //     {value: 5, ratio: 0}, {value: 0, ratio: 0}
-        // ];
-        // this._dcss.sortByLibrary(dataset, 10, 'ascent', value => console.log()).then();
-        // let dataset: DataType[] = Array.from({length: 10})
-        //     .map(() => ({value: Math.floor(Math.random() * 10 + 1), ratio: 0}));
-        // console.log(dataset);
-        // let data: DataType = {value: 128, ratio: 0};
-        // console.log(data, this._dsus.calcDigit(data, 3));
-    }
-
     ngOnDestroy() {
         this.dataset$.complete();
         this.pivotIndex$.complete();
@@ -241,7 +226,7 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
                     this.swap = 0;
                     this.auxc = 0;
                     this.phase$.next(2);
-                    let subscription = timer(0, 1000)
+                    let subscription = timer(0, 10)
                         .subscribe(value => {
                             this.time = value;
                             this.timer$.next(value);
@@ -273,12 +258,10 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     handleToggleCloseAction(): void {
-        let name: string = this.fetch(this.group.value['nameCtrl']);
-        let size: number = coerceNumberProperty(this.fetch(this.group.value['sizeCtrl']));
-        let delay: SpeedType = this.group.value['speedCtrl'];
-        let order: OrderType = this.group.value['orderCtrl'];
         let array: SortMeta[] = this.source.data;
-        array.push({code: array.length + 1, name, swap: this.swap, auxc: this.auxc, size, time: this.time, delay, order});
+        array.push({code: array.length + 1, name: this.fetch(this.group.value['nameCtrl']),
+            swap: this.swap, auxc: this.auxc, size: coerceNumberProperty(this.group.value['sizeCtrl']),
+            time: this.time, delay: this.group.value['speedCtrl'], order: this.group.value['orderCtrl']});
         this.source.data = array;
         this.shown$.next(false);
     }
@@ -380,6 +363,9 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             case 'intro':
                 this.execIntroSort(speed, order, subscription);
                 break;
+            case 'library':
+                this.execLibrarySort(speed, order, subscription);
+                break;
             case 'merge-bu':
                 this.execMergeBUSort(speed, order, subscription);
                 break;
@@ -416,8 +402,8 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             case 'oem-bu':
                 this.execOEMergeBUSort(speed, order, subscription);
                 break;
-            case 'pairwise-bu':
-                this.execPairwiseBUSort(speed, order, subscription);
+            case 'pairwise':
+                this.execPairwiseSort(speed, order, subscription);
                 break;
             case 'pancake':
                 this.execPancakeSort(speed, order, subscription);
@@ -727,6 +713,15 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
         }).then(() => this.execComplete(this.dataset.length, speed, subscription));
     }
 
+    private execLibrarySort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
+        this._doss.sortByLibrary(this.dataset, speed, order, value => {
+            this.dataset$.next(value.dataset);
+            this.pivotIndex$.next(value.pivotIndex);
+            this.swapCount$.next(value.swapCount);
+            this.auxCount$.next(value.auxCount);
+        }).then(() => this.execComplete(this.dataset.length, speed, subscription));
+    }
+
     private execMergeBUSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
         this._dcss.sortByMergeBU(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
@@ -798,8 +793,8 @@ export class DemoSortView implements OnInit, OnDestroy, AfterViewInit {
             }).then(() => this.execComplete(this.dataset.length, speed, subscription));
     }
 
-    private execPairwiseBUSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
-        this._doss.sortByPairwiseBU(this.dataset, speed, order, value => {
+    private execPairwiseSort(speed: SpeedType, order: OrderType, subscription: Subscription): void {
+        this._doss.sortByPairwise(this.dataset, speed, order, value => {
             this.dataset$.next(value.dataset);
             this.currIndex$.next(value.currIndex);
             this.nextIndex$.next(value.nextIndex);

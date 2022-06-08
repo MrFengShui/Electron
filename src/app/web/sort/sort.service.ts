@@ -373,7 +373,7 @@ export class DemoOtherSortService {
             let k: number = await this.bitonicMergeBU(dataset, low, cnt, dir, count, speed, order, value => {
                 count = value.swapCount as number;
                 callback({...value, swapCount: count});
-            })
+            });
             await this.bitonicMergeTD(dataset, low, k, dir, count, speed, order, value => {
                 count = value.swapCount as number;
                 callback({...value, swapCount: count});
@@ -864,8 +864,6 @@ export class DemoOtherSortService {
                     } else {
                         callback({dataset, currIndex: i, swapCount: count})
                     }
-
-                    await sleep(speed);
                 }
             }
 
@@ -887,10 +885,10 @@ export class DemoOtherSortService {
                     } else {
                         callback({dataset, currIndex: i, swapCount: count})
                     }
-
-                    await sleep(speed);
                 }
             }
+
+            await sleep(speed);
         }
 
         callback({dataset, swapCount: count});
@@ -905,21 +903,93 @@ export class DemoOtherSortService {
      */
     public async sortByLibrary(dataset: DataType[], speed: SpeedType, order: OrderType,
                                callback: (_value: SortReturnMeta) => void): Promise<void> {
-        let array: DataType[] = await DemoOtherSortService.libRebalance(dataset,
-            Array.from({length: dataset.length * 2}), false, speed, callback);
+        let index: number = 0, limit: number, pos: number = 0, j: number = 1;
+        let swapCount: number = 0, auxCount: number = 0;
+        let temp: DataType[] = dataset.slice(j), array: DataType[] = await DemoOtherSortService.libRebalance(dataset,
+            Array.from({length: dataset.length * 2}), true, swapCount, auxCount, speed,
+                value => {
+                    swapCount = value.swapCount as number;
+                    auxCount = value.auxCount as number;
+                    callback({...value, swapCount, auxCount});
+                });
 
-        callback({dataset});
+        while (j !== dataset.length - 1 && !this._service.ordered(temp, order)) {
+            limit = j + j - 1;
+
+            for (let i = j; i < dataset.length; i++) {
+                index = i + i + 1;
+                pos = this._service.binarySearch(array, 0, limit, array[index], order);
+
+                if (array[pos].exist) {
+                    if (array[pos].value === array[index].value) {
+                        if (pos === 0 || array[pos - 1].exist) {
+                            array = await DemoOtherSortService.libRebalance(dataset, array, false,
+                                swapCount, auxCount, speed,
+                                value => {
+                                    swapCount = value.swapCount as number;
+                                    auxCount = value.auxCount as number;
+                                    callback({...value, swapCount, auxCount});
+                                });
+                            j = i;
+                            break;
+                        } else {
+                            array[pos - 1].value = array[index].value;
+                            array[pos - 1].ratio = array[index].ratio;
+                            array[pos - 1].exist = true;
+                            array[index].exist = false;
+                            swapCount += 1;
+                        }
+                    } else {
+                        array = await DemoOtherSortService.libRebalance(dataset, array, false,
+                            swapCount, auxCount, speed,
+                            value => {
+                                swapCount = value.swapCount as number;
+                                auxCount = value.auxCount as number;
+                                callback({...value, swapCount, auxCount});
+                            });
+                        j = i;
+                        break;
+                    }
+                } else {
+                    array[pos].value = array[index].value;
+                    array[pos].ratio = array[index].ratio;
+                    array[pos].exist = true;
+                    array[index].exist = false;
+                    swapCount += 1;
+                }
+
+                callback({dataset, swapCount, auxCount});
+                await sleep(speed);
+            }
+
+            temp = dataset.slice(j);
+        }
+
+        callback({dataset, swapCount, auxCount});
     }
 
-    private static async libRebalance(dataset: DataType[], array: DataType[], init: boolean, speed: SpeedType,
+    /**
+     *
+     * @param dataset
+     * @param array
+     * @param init
+     * @param swapCount
+     * @param auxCount
+     * @param speed
+     * @param callback
+     * @private
+     */
+    private static async libRebalance(dataset: DataType[], array: DataType[], init: boolean,
+                                      swapCount: number, auxCount: number, speed: SpeedType,
                                       callback: (_value: SortReturnMeta) => void): Promise<DataType[]> {
         let index: number = 0;
 
         if (!init) {
             for (let i = 0; i < array.length; i++) {
                 if (array[i].exist) {
+                    auxCount += 1;
                     dataset[index] = {value: array[i].value, ratio: array[i].ratio};
-                    callback({dataset, pivotIndex: index});
+                    callback({dataset, pivotIndex: index, swapCount, auxCount});
                     index++;
                 }
 
@@ -928,9 +998,11 @@ export class DemoOtherSortService {
         }
 
         for (let i = 0; i < dataset.length; i++) {
+            auxCount += 1;
             index = i + i;
             array[index] = {value: dataset[i].value, ratio: dataset[i].ratio, exist: false};
             array[index + 1] = {value: dataset[i].value, ratio: dataset[i].ratio, exist: true};
+            callback({dataset, pivotIndex: i, swapCount, auxCount});
             await sleep(speed);
         }
 
@@ -1090,8 +1162,15 @@ export class DemoOtherSortService {
         }
     }
 
-    public async sortByPairwiseBU(dataset: DataType[], speed: SpeedType, order: OrderType,
-                                  callback: (_value: SortReturnMeta) => void): Promise<void> {
+    /**
+     *
+     * @param dataset
+     * @param speed
+     * @param order
+     * @param callback
+     */
+    public async sortByPairwise(dataset: DataType[], speed: SpeedType, order: OrderType,
+                                callback: (_value: SortReturnMeta) => void): Promise<void> {
         let count: number = 0, gap: number, dist: number;
 
         for (gap = 1; gap < dataset.length; gap *= 2) {
@@ -1124,36 +1203,55 @@ export class DemoOtherSortService {
 
         for (gap = gap >> 2, dist = 1; gap > 0; gap = gap >> 1, dist = 2 * dist + 1) {
             for (let d = dist; d > 0; d = d >> 1) {
-                let i: number = (d + 1) * gap;
-                let pnt: number = 0;
-
-                while (i < dataset.length) {
-                    if (order === 'ascent' && dataset[i - d * gap].value > dataset[i].value) {
-                        count += 1;
-                        this._service.swap(dataset, i - d * gap, i);
-                        callback({dataset, currIndex: i - d * gap, nextIndex: i, swapCount: count});
-                    } else if (order === 'descent' && dataset[i - d * gap].value < dataset[i].value) {
-                        count += 1;
-                        this._service.swap(dataset, i - d * gap, i);
-                        callback({dataset, currIndex: i - d * gap, nextIndex: i, swapCount: count});
-                    } else {
-                        callback({dataset, currIndex: i - d * gap, swapCount: count});
-                    }
-
-                    pnt++;
-                    i++;
-
-                    if (pnt >= gap) {
-                        pnt = 0;
-                        i += gap;
-                    }
-
-                    await sleep(speed);
-                }
+                await this.pwMergeBU(dataset, gap, d, count, speed, order, value => {
+                    count = value.swapCount as number;
+                    callback({...value, swapCount: count});
+                });
             }
         }
 
         callback({dataset, swapCount: count});
+    }
+
+    /**
+     *
+     * @param dataset
+     * @param gap
+     * @param dist
+     * @param count
+     * @param speed
+     * @param order
+     * @param callback
+     * @private
+     */
+    private async pwMergeBU(dataset: DataType[], gap: number, dist: number, count: number, speed: SpeedType,
+                            order: OrderType, callback: (_value: SortReturnMeta) => void): Promise<void> {
+        let i: number = (dist + 1) * gap;
+        let pnt: number = 0;
+
+        while (i < dataset.length) {
+            if (order === 'ascent' && dataset[i - dist * gap].value > dataset[i].value) {
+                count += 1;
+                this._service.swap(dataset, i - dist * gap, i);
+                callback({dataset, currIndex: i - dist * gap, nextIndex: i, swapCount: count});
+            } else if (order === 'descent' && dataset[i - dist * gap].value < dataset[i].value) {
+                count += 1;
+                this._service.swap(dataset, i - dist * gap, i);
+                callback({dataset, currIndex: i - dist * gap, nextIndex: i, swapCount: count});
+            } else {
+                callback({dataset, currIndex: i - dist * gap, swapCount: count});
+            }
+
+            pnt++;
+            i++;
+
+            if (pnt >= gap) {
+                pnt = 0;
+                i += gap;
+            }
+
+            await sleep(speed);
+        }
     }
 
     /**

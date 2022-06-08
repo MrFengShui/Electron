@@ -4,7 +4,7 @@ import {
     AfterViewInit,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
-    Component, ElementRef,
+    Component,
     HostBinding,
     NgZone,
     OnDestroy,
@@ -25,9 +25,6 @@ import {
 
 import {MazeGenerationMeta, MazeSaveMeta, ToggleModel} from "../../global/model/global.model";
 
-import {drawBorderLine, fillGridColor} from "../../global/utils/canvas.utils";
-import {sleep} from "../../global/utils/global.utils";
-
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'demo-maze-generate-view',
@@ -38,12 +35,6 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
 
     @ViewChild('view', {read: TemplateRef})
     private view!: TemplateRef<any>;
-
-    @ViewChild('container', {read: ElementRef})
-    private container!: ElementRef<HTMLElement>;
-
-    @ViewChild('canvas', {read: ElementRef, static: true})
-    private canvas!: ElementRef<HTMLCanvasElement>;
 
     @HostBinding('class') class: string = 'demo-maze-view';
 
@@ -94,12 +85,9 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
     select!: SelectionModel<MazeGenerationMeta>;
 
     private anchor: HTMLAnchorElement | null = null;
-    private context: CanvasRenderingContext2D | null = null;
     private cells: MazeCellType[] = [];
     private cols: number = 0;
     private rows: number = 0;
-    private offsetX: number = 0;
-    private offsetY: number = 0;
     private time: number = 0;
 
     constructor(
@@ -144,7 +132,6 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     handleToggleRunAction(): void {
-        this.drawMazeGrid();
         this.select$.next(this.fetch(this.group.value['nameCtrl']));
         this.shown$.next(true);
         this.timer$.next(0);
@@ -164,7 +151,6 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
         if (this.group.valid) {
             this.cols = coerceNumberProperty(this.group.value['colsCtrl']);
             this.rows = coerceNumberProperty(this.group.value['rowsCtrl']);
-            // this.context = this.canvas.nativeElement.getContext('2d');
             this.columns$.next(this.cols);
             this.usable$.next(false);
             this.buildMazeGrid(this.cols, this.rows);
@@ -327,13 +313,6 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
             this.phase$.next(0);
             subscription.unsubscribe();
         });
-        // this._service.mazeByBackTracker(this.cells, this.context, this.offsetX, this.offsetY, 2, speed,
-        //     completed => {
-        //         if (completed) {
-        //             this.phase$.next(0);
-        //             subscription.unsubscribe();
-        //         }
-        //     });
     }
 
     private execBinaryTree(direct: BinaryTreeDirection, cols: number, rows: number, speed: SpeedType,
@@ -488,24 +467,6 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
         }
 
         this.cells$.next(this.cells);
-    }
-
-    private drawMazeGrid(size: number = 2): void {
-        let task = setTimeout(() => {
-            clearTimeout(task);
-
-            if (this.context !== null) {
-                this.context.lineWidth = size;
-                this.context.fillStyle = '#ff00ff';
-                this.context.strokeStyle = '#ffffff';
-            }
-
-            let x: number = (this.container.nativeElement.clientWidth - size * this.cols - size) / this.cols;
-            let y: number = (this.container.nativeElement.clientHeight - size * this.rows - size) / this.rows;
-            this.offsetX = x + size;
-            this.offsetY = y + size;
-            this.cells.forEach(cell => drawBorderLine(this.context, cell.grid, this.offsetX, this.offsetY, size));
-        });
     }
 
     private static merge(currCell: MazeCellType, nextCell: MazeCellType): void {

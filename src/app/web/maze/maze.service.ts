@@ -125,42 +125,6 @@ export class DemoMazeGenerateAlgorithmService {
         await callback({});
     }
 
-    public mazeByBackTracker(cells: MazeCellType[], context: CanvasRenderingContext2D | null,
-                             offsetX: number, offsetY: number, size: number, speed: SpeedType,
-                             callback: (_completed: boolean) => void): void {
-        let currCell: MazeCellType | undefined, nextCell: MazeCellType;
-        let stack: MazeCellType[] = [cells[Math.floor(Math.random() * cells.length)]];
-        let task = setInterval(() => {
-            if (cells.every(cell => cell.visited)) {
-                clearInterval(task);
-                callback(true);
-            }
-
-            currCell = stack.pop();console.log(currCell);
-
-            if (currCell) {
-                currCell.visited = true;
-                fillGridColor(context, currCell.grid, offsetX, offsetY, size);
-
-                let neighbors: MazeCellType[] = DemoMazeGenerateAlgorithmService.neighbors(cells, currCell)
-                    .filter(neighbor => !neighbor.visited);
-
-                if (neighbors.length > 0) {
-                    stack.push(currCell);
-
-                    nextCell = neighbors[Math.floor(Math.random() * neighbors.length)];
-                    nextCell.visited = true;
-                    stack.push(nextCell);
-
-                    DemoMazeGenerateAlgorithmService.merge(currCell, nextCell);
-                    drawBorderLine(context, currCell.grid, offsetX, offsetY, size);
-                    drawBorderLine(context, nextCell.grid, offsetX, offsetY, size);
-                }
-            }
-
-            callback(false);
-        }, speed);
-    }
 
     /**
      *
@@ -1046,34 +1010,6 @@ export class DemoMazeGenerateAlgorithmService {
                     return false;
             }
         });
-    }
-
-    /**
-     *
-     * @param currCell
-     * @param nextCell
-     * @private
-     */
-    private static merge(currCell: MazeCellType, nextCell: MazeCellType): void {
-        if (currCell.grid.y + 1 === nextCell.grid.y) {
-            currCell.grid.bb = false;
-            nextCell.grid.bt = false;
-        }
-
-        if (currCell.grid.y - 1 === nextCell.grid.y) {
-            currCell.grid.bt = false;
-            nextCell.grid.bb = false;
-        }
-
-        if (currCell.grid.x + 1 === nextCell.grid.x) {
-            currCell.grid.br = false;
-            nextCell.grid.bl = false;
-        }
-
-        if (currCell.grid.x - 1 === nextCell.grid.x) {
-            currCell.grid.bl = false;
-            nextCell.grid.br = false;
-        }
     }
 
     /**
