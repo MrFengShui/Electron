@@ -1,4 +1,5 @@
 import {animate, state, style, transition, trigger} from "@angular/animations";
+import {coerceBooleanProperty} from "@angular/cdk/coercion";
 import {
     AfterViewInit, ApplicationRef, ChangeDetectorRef,
     Component,
@@ -12,12 +13,11 @@ import {
 import {DOCUMENT} from "@angular/common";
 import {MatDialog, MatDialogRef} from "@angular/material/dialog";
 import {MatRadioChange} from "@angular/material/radio";
+import {MatSlideToggleChange} from "@angular/material/slide-toggle";
 import {TranslocoService} from "@ngneat/transloco";
-import {BehaviorSubject, interval, Observable, of, Subject, Subscription} from "rxjs";
+import {BehaviorSubject, interval, Subject, Subscription} from "rxjs";
 
 import {ColorType, LocaleType, register} from "./global/utils/global.utils";
-import {MatSlideToggleChange} from "@angular/material/slide-toggle";
-import {coerceBooleanProperty} from "@angular/cdk/coercion";
 
 interface PaletteToggleModel {
 
@@ -62,18 +62,17 @@ export class AppComponent implements OnDestroy, AfterViewInit {
 
     @HostListener('window:load')
     private listenWindowOnload(): void {
-        // let subscription = this._zone.runTask(() =>
-        //     this.progress$.subscribe(value => {
-        //         if (value === 100) {
-        //             this.subscription?.unsubscribe();
-        //             subscription.unsubscribe();
-        //
-        //             let task = setTimeout(() => {
-        //                 clearTimeout(task);
-        //                 this.hideSplashScreen();
-        //             }, 1000);
-        //         }
-        //     }));
+        let subscription = this._zone.runTask(() =>
+            this.progress$.subscribe(value => {
+                if (value === 100) {
+                    subscription.unsubscribe();
+
+                    let task = setTimeout(() => {
+                        clearTimeout(task);
+                        this.hideSplashScreen();
+                    }, 1000);
+                }
+            }));
     }
 
     bright$: Subject<boolean> = new BehaviorSubject<boolean>(false);
@@ -129,7 +128,7 @@ export class AppComponent implements OnDestroy, AfterViewInit {
 
     ngAfterViewInit() {
         this.initialize();
-        // this.showSplashScreen();
+        this.showSplashScreen();
     }
 
     ngOnDestroy() {
@@ -145,7 +144,6 @@ export class AppComponent implements OnDestroy, AfterViewInit {
     }
 
     listenColorChange(change: MatRadioChange): void {
-        console.log(change);
         this.storeColor(change.value);
     }
 

@@ -2,8 +2,8 @@
 {
     "compileOnSave": false,
     "compilerOptions": {
-        "baseUrl": "./",
-        "outDir": "./dist/electron",
+        "baseUrl": ".",
+        "outDir": "./dist/web",
         "forceConsistentCasingInFileNames": true,
         "strict": true,
         "noImplicitOverride": true,
