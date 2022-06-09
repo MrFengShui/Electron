@@ -43,6 +43,11 @@
     "DEMO.TIP.TUNE": "系统设置",
 
     "DEMO.ICON.COPY": "点击复制代码",
+    "DEMO.ICON.COPIED": "已复制图标代码",
+
+    "DEMO.ERROR.LINK": "回到主页",
+    "DEMO.ERROR.TITLE": "错误404",
+    "DEMO.ERROR.SUBTITLE": "页面未找到",
 
     "DEMO.SORT.RANDOM": "生成随机数组",
     "DEMO.SORT.ORDER.ASCENT": "升序",

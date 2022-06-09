@@ -254,6 +254,28 @@ $text-map: left, right, center, justify;
     }
 }
 
+.demo-error-view {
+    .demo-error-view-wrapper {
+        background-image: url(assets/image/error-page.jpg);
+        background-origin: border-box;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+}
+
+.demo-navigation-view {
+    .demo-navigation-view-wrapper {
+        a {
+            text-decoration: none;
+        }
+    }
+}
+
 .demo-sort-view {
     .demo-sort-view-wrapper {
         border-radius: 0;

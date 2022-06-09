@@ -1,4 +1,4 @@
-import {MazeGridType} from "../../web/maze/maze.service";
+import {MazeGridType} from "../../web/demo/maze/maze.service";
 
 export const drawBorderLine = (context: CanvasRenderingContext2D | null, grid: MazeGridType,
                                offsetX: number, offsetY: number, size: number = 2): void => {

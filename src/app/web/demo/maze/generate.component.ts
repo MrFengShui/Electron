@@ -23,7 +23,7 @@ import {
     SpeedType
 } from "./maze.service";
 
-import {MazeGenerationMeta, MazeSaveMeta, ToggleModel} from "../../global/model/global.model";
+import {MazeGenerationMeta, MazeSaveMeta, ToggleModel} from "../../../global/model/global.model";
 
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,5 +1,4 @@
 import {animate, state, style, transition, trigger} from "@angular/animations";
-import {coerceBooleanProperty} from "@angular/cdk/coercion";
 import {
     AfterViewInit, ApplicationRef, ChangeDetectorRef,
     Component,
@@ -10,37 +9,21 @@ import {
     TemplateRef,
     ViewChild
 } from '@angular/core';
-import {DOCUMENT} from "@angular/common";
+import {APP_BASE_HREF, DOCUMENT} from "@angular/common";
 import {MatDialog, MatDialogRef} from "@angular/material/dialog";
-import {MatRadioChange} from "@angular/material/radio";
-import {MatSlideToggleChange} from "@angular/material/slide-toggle";
 import {TranslocoService} from "@ngneat/transloco";
+import {Store} from "@ngrx/store";
 import {BehaviorSubject, interval, Subject, Subscription} from "rxjs";
 
-import {ColorType, LocaleType, register} from "./global/utils/global.utils";
+import {register} from "./global/utils/global.utils";
 
-interface PaletteToggleModel {
-
-    color: ColorType;
-    label: string;
-    style: string;
-
-}
-
-interface LocaleToggleModel {
-
-    code: LocaleType;
-    name: string;
-
-}
-
-interface RouteLinkModel {
-
-    icon: string;
-    link: string[];
-    text: string;
-
-}
+import {StorageSaveLoadState} from "./global/ngrx/storage.reducer";
+import {STORAGE_SELECTOR} from "./global/ngrx/storage.selector";
+import {
+    STORAGE_COLOR_SAVE_ACTION,
+    STORAGE_LOCALE_SAVE_ACTION,
+    STORAGE_THEME_SAVE_ACTION
+} from "./global/ngrx/storage.action";
 
 @Component({
     animations: [
@@ -51,7 +34,8 @@ interface RouteLinkModel {
         ])
     ],
     selector: 'app-root',
-    templateUrl: './app.component.html'
+    templateUrl: './app.component.html',
+    providers: [{provide: APP_BASE_HREF, useValue: '.'}]
 })
 export class AppComponent implements OnDestroy, AfterViewInit {
 
@@ -78,37 +62,15 @@ export class AppComponent implements OnDestroy, AfterViewInit {
     bright$: Subject<boolean> = new BehaviorSubject<boolean>(false);
     progress$: Subject<number> = new BehaviorSubject<number>(0);
 
-    locale: LocaleType | null = null;
-    color: ColorType | null = null;
-    theme: boolean | null = null;
-
     readonly tags: { title: string, subtitle: string } = {
         title: 'DEMO.PUBLIC.DECLAIM',
         subtitle: 'DEMO.PUBLIC.COPYRIGHT'
     };
-    readonly paletteToggles: PaletteToggleModel[] = [
-        {color: 'default', label: 'DEMO.TUNE.THEME.DEFAULT', style: '#673AB7'},
-        {color: 'spring', label: 'DEMO.TUNE.THEME.SPRING', style: '#4CAF50'},
-        {color: 'summer', label: 'DEMO.TUNE.THEME.SUMMER', style: '#F44336'},
-        {color: 'autumn', label: 'DEMO.TUNE.THEME.AUTUMN', style: '#FFC107'},
-        {color: 'winter', label: 'DEMO.TUNE.THEME.WINTER', style: '#3F51B5'}
-    ];
-    readonly localeToggles: LocaleToggleModel[] = [
-        {code: 'en', name: 'DEMO.TUNE.LOCALE.EN'},
-        {code: 'zhs', name: 'DEMO.TUNE.LOCALE.ZHS'},
-        {code: 'zht', name: 'DEMO.TUNE.LOCALE.ZHT'}
-    ];
-    readonly links: RouteLinkModel[] = [
-        {icon: 'image_search', link: ['/demo', 'icon'], text: 'DEMO.LIST.ICON'},
-        {icon: 'route', link: ['/demo', 'maze', 'generate'], text: 'DEMO.LIST.MAZEG'},
-        {icon: 'route', link: ['/demo', 'maze', 'solve'], text: 'DEMO.LIST.MAZES'},
-        {icon: 'sort_by_alpha', link: ['/demo', 'sort'], text: 'DEMO.LIST.SORT'}
-    ];
 
     private subscriptions: Subscription[] = [];
     private dialogRef: MatDialogRef<any> | null = null;
-    private storage: Storage = window.sessionStorage;
     private progress: number = 0;
+    private first: boolean = true;
 
     constructor(
         private _ref: ApplicationRef,
@@ -117,6 +79,7 @@ export class AppComponent implements OnDestroy, AfterViewInit {
         private _cdr: ChangeDetectorRef,
         private _render: Renderer2,
         private _zone: NgZone,
+        private _store: Store<StorageSaveLoadState>,
         private _service: TranslocoService,
         private _dialog: MatDialog
     ) {
@@ -127,8 +90,23 @@ export class AppComponent implements OnDestroy, AfterViewInit {
     }
 
     ngAfterViewInit() {
-        this.initialize();
-        this.showSplashScreen();
+        // this.showSplashScreen();
+        let subscription = this._zone.runOutsideAngular(() =>
+            this._store.select(STORAGE_SELECTOR)
+                .subscribe(value => {
+                    if (this.first) {
+                        this._store.dispatch(STORAGE_LOCALE_SAVE_ACTION({payload: value.locale}));
+                        this._store.dispatch(STORAGE_COLOR_SAVE_ACTION({payload: value.color}));
+                        this._store.dispatch(STORAGE_THEME_SAVE_ACTION({payload: value.theme}));
+                        this.first = false;
+                    } else {
+                        this._service.setActiveLang(value.locale);
+                        register(value.locale);
+                        this._render.setAttribute(this._document.documentElement, 'class',
+                            `global-theme theme-${value.color} ${value.theme ? 'active' : ''}`);
+                    }
+                }));
+        this.subscriptions.push(subscription);
     }
 
     ngOnDestroy() {
@@ -137,91 +115,6 @@ export class AppComponent implements OnDestroy, AfterViewInit {
                 subscription.unsubscribe();
             }
         });
-    }
-
-    listenLocaleChange(change: MatRadioChange): void {
-        this.setLocale(change.value);
-    }
-
-    listenColorChange(change: MatRadioChange): void {
-        this.storeColor(change.value);
-    }
-
-    listenThemeChange(change: MatSlideToggleChange): void {
-        this.storeTheme(change.checked);
-    }
-
-    handleColorAction(event: MouseEvent, color: ColorType): void {
-        event.stopPropagation();
-        this.color = color;
-        this._cdr.detectChanges();
-    }
-
-    private initialize(): void {
-        this.locale = this.getLocale();
-        this.color = this.getColor();
-        this.theme = this.getTheme();
-
-        if (this.locale === null) {
-            this.setLocale('en');
-        } else {
-            this._service.setActiveLang(this.locale);
-            register(this.locale);
-        }
-
-        if (this.color === null) {
-            this.storeColor('default');
-        } else {
-            this.renderColorTheme(this.color, this.theme);
-        }
-
-        if (this.theme === null) {
-            this.storeTheme(true);
-        } else {
-            this.renderColorTheme(this.color, this.theme);
-        }
-    }
-
-    private renderColorTheme(color: ColorType | null, theme: boolean | null): void {
-        let task = setTimeout(() => {
-            clearTimeout(task);
-            this._render.setAttribute(this._document.documentElement, 'class',
-                `global-theme theme-${color} ${theme ? 'active' : ''}`);
-        });
-    }
-
-    private setLocale(locale: LocaleType): void {
-        this.locale = locale;
-        this.storage.setItem('locale', locale);
-        this._service.setActiveLang(locale);
-        register(locale);
-    }
-
-    private getLocale(): LocaleType | null {
-        let value: string | null = this.storage.getItem('locale');
-        return value === null ? null : value as LocaleType;
-    }
-
-    private storeColor(color: ColorType): void {
-        this.color = color;
-        this.storage.setItem('color', color);
-        this.renderColorTheme(color, this.theme);
-    }
-
-    private getColor(): ColorType | null {
-        let value: string | null = this.storage.getItem('color');
-        return value === null ? null : value as ColorType;
-    }
-
-    private storeTheme(theme: boolean): void {
-        this.theme = theme;
-        this.storage.setItem('theme', `${theme}`);
-        this.renderColorTheme(this.color, theme);
-    }
-
-    private getTheme(): boolean | null {
-        let value: string | null = this.storage.getItem('theme');
-        return value === null ? null : coerceBooleanProperty(value);
     }
 
     private execLoadingProgress(): void {

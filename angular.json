@@ -24,7 +24,7 @@
                     "builder": "@angular-devkit/build-angular:browser",
                     "options": {
                         "aot": true,
-                        "baseHref": ".",
+                        "baseHref": "/",
                         "outputPath": "dist/web",
                         "index": "src/index.html",
                         "main": "src/main.ts",
@@ -37,26 +37,29 @@
                             "src/assets"
                         ],
                         "styles": [
-                            "src/styles.scss",
                             {
-                                "input": "src/assets/theme/default.theme.scss",
-                                "bundleName": "default.theme"
+                                "bundleName": "default.theme",
+                                "input": "src/assets/theme/default.theme.scss"
                             },
                             {
-                                "input": "src/assets/theme/spring.theme.scss",
-                                "bundleName": "spring.theme"
+                                "bundleName": "spring.theme",
+                                "input": "src/assets/theme/spring.theme.scss"
                             },
                             {
-                                "input": "src/assets/theme/summer.theme.scss",
-                                "bundleName": "summer.theme"
+                                "bundleName": "summer.theme",
+                                "input": "src/assets/theme/summer.theme.scss"
                             },
                             {
-                                "input": "src/assets/theme/autumn.theme.scss",
-                                "bundleName": "autumn.theme"
+                                "bundleName": "autumn.theme",
+                                "input": "src/assets/theme/autumn.theme.scss"
                             },
                             {
-                                "input": "src/assets/theme/winter.theme.scss",
-                                "bundleName": "winter.theme"
+                                "bundleName": "winter.theme",
+                                "input": "src/assets/theme/winter.theme.scss"
+                            },
+                            {
+                                "bundleName": "styles",
+                                "input": "src/styles.scss"
                             }
                         ],
                         "scripts": []

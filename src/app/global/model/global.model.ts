@@ -1,4 +1,12 @@
-import {MazeGridType, MazePathType, MazeViewType} from "../../web/maze/maze.service";
+import {MazeViewType} from "../../web/demo/maze/maze.service";
+
+export interface RouteLinkModel {
+
+    icon: string;
+    link: string[];
+    text: string;
+
+}
 
 export interface ToggleModel<T = any> {
 

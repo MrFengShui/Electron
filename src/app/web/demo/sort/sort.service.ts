@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 
-import {sleep} from "../../global/utils/global.utils";
+import {sleep} from "../../../global/utils/global.utils";
 
 export interface SortReturnMeta {
 

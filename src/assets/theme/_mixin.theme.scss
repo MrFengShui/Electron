@@ -20,6 +20,18 @@
         background-color: transparent !important;
     }
 
+    .txt-base {
+        color: $txtcolor;
+    }
+
+    .txt-dark {
+        color: #212121;
+    }
+
+    .txt-light {
+        color: #f5f5f5;
+    }
+
     $list: (
         "primary": $primary,
         "accent": $accent,

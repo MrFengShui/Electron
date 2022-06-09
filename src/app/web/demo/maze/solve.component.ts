@@ -24,7 +24,7 @@ import {
     SpeedType
 } from "./maze.service";
 
-import {MazeGenerationMeta, MazeSaveMeta, ToggleModel} from "../../global/model/global.model";
+import {MazeGenerationMeta, MazeSaveMeta, ToggleModel} from "../../../global/model/global.model";
 
 type MazeStartFinal = 'tlbr' | 'brtl' | 'bltr' | 'trbl' | 'tltr' | 'trtl' | 'blbr' | 'brbl' | 'tlbl' | 'bltl'
     | 'trbr' | 'brtr';

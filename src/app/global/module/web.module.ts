@@ -1,49 +1,29 @@
 import {NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
-import {FormsModule, ReactiveFormsModule} from "@angular/forms";
-import {TranslocoModule} from "@ngneat/transloco";
+import {StoreModule} from "@ngrx/store";
 
 import {GlobalMaterialModule} from "./material.module";
+import {GlobalTranslateModule} from "./translate.module";
+import {WebDemoModule} from "../../web/demo/demo.module";
 
 import {DemoErrorView} from "../../web/error/error.component";
-import {DemoIconView} from "../../web/icon/icon.component";
-import {DemoMazeGenerateView} from "../../web/maze/generate.component";
-import {DemoMazeSolveView} from "../../web/maze/solve.component";
-import {DemoSortView} from "../../web/sort/sort.component";
 
-import {DurationPipe} from "../pipe/duration.pipe";
-import {MazeStatusPipe} from "../../web/maze/maze.pipe";
-import {SortOrderPipe, SortStatusPipe} from "../../web/sort/sort.pipe";
+import {STORAGE_FEATURE_KEY} from "../ngrx/storage.selector";
+import {STORAGE_REDUCER} from "../ngrx/storage.reducer";
 
 @NgModule({
     declarations: [
-        DemoErrorView,
-        DemoIconView,
-        DemoMazeGenerateView,
-        DemoMazeSolveView,
-        DemoSortView,
-        DurationPipe,
-        MazeStatusPipe,
-        SortOrderPipe,
-        SortStatusPipe
+        DemoErrorView
     ],
     imports: [
         CommonModule,
-        FormsModule,
-        ReactiveFormsModule,
-        TranslocoModule,
-        GlobalMaterialModule
+        StoreModule.forFeature(STORAGE_FEATURE_KEY, STORAGE_REDUCER),
+        WebDemoModule,
+        GlobalMaterialModule,
+        GlobalTranslateModule
     ],
     exports: [
-        DemoErrorView,
-        DemoIconView,
-        DemoMazeGenerateView,
-        DemoMazeSolveView,
-        DemoSortView,
-        DurationPipe,
-        MazeStatusPipe,
-        SortOrderPipe,
-        SortStatusPipe
+        DemoErrorView
     ]
 })
 export class GlobalWebModule {}

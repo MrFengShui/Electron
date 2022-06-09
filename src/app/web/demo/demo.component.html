@@ -1,0 +1,64 @@
+<div class="demo-root-wrapper h-100">
+    <mat-toolbar color="primary">
+        <a [routerLink]="['/']" matRipple class="d-flex align-items-center py-100" style="cursor: pointer">
+            <img src="assets/image/electron-full.svg" alt="logo.svg" height="32"
+                 style="filter: brightness(2.0) drop-shadow(0 0 2px #212121)">
+        </a>
+        <span class="flex-fill"></span>
+        <button mat-icon-button matTooltip="{{'DEMO.TIP.TUNE' | transloco}}" [matMenuTriggerFor]="tune">
+            <mat-icon>tune</mat-icon>
+        </button>
+    </mat-toolbar>
+    <mat-sidenav-container autosize style="height: calc(100% - 4rem);">
+        <mat-sidenav mode="side" [opened]="flag$ | async" style="width: 15rem;z-index: 0;">
+            <mat-nav-list>
+                <a mat-list-item [routerLink]="link.link" routerLinkActive="bg-primary" *ngFor="let link of links">
+                    <mat-icon matListIcon>{{link.icon}}</mat-icon>
+                    <span matLine>{{link.text | transloco}}</span>
+                </a>
+            </mat-nav-list>
+        </mat-sidenav>
+        <mat-sidenav-content class="overflow overflow-y overflow-primary p-100" style="box-sizing: border-box">
+            <router-outlet></router-outlet>
+        </mat-sidenav-content>
+    </mat-sidenav-container>
+</div>
+<mat-menu class="demo-menu" #tune="matMenu">
+    <span mat-menu-item class="d-flex align-items-center" (click)="$event.stopPropagation()">
+        <mat-slide-toggle [checked]="theme" labelPosition="before" class="demo-slide-toggle w-100"
+                          (change)="listenThemeChange($event)">
+            <mat-icon>{{theme ? 'dark_mode' : 'light_mode'}}</mat-icon>
+            <span>{{(theme ? 'DEMO.TUNE.MODE.DARK' : 'DEMO.TUNE.MODE.LIGHT') | transloco}}</span>
+        </mat-slide-toggle>
+    </span>
+    <button mat-menu-item [matMenuTriggerFor]="palette">
+        <mat-icon>palette</mat-icon>
+        <span>{{'DEMO.TUNE.THEME' | transloco}}</span>
+    </button>
+    <button mat-menu-item [matMenuTriggerFor]="language">
+        <mat-icon>translate</mat-icon>
+        <span>{{'DEMO.TUNE.LOCALE' | transloco}}</span>
+    </button>
+</mat-menu>
+<mat-menu class="demo-menu" #language="matMenu">
+    <mat-radio-group color="primary" [value]="locale" (change)="listenLocaleChange($event)">
+        <span mat-menu-item *ngFor="let toggle of localeToggles">
+            <mat-radio-button [value]="toggle.code" class="w-100" (click)="$event.stopPropagation()">
+                {{toggle.name | transloco}}
+            </mat-radio-button>
+        </span>
+    </mat-radio-group>
+</mat-menu>
+<mat-menu class="demo-menu" #palette="matMenu">
+    <mat-radio-group color="primary" [value]="color" (change)="listenColorChange($event)">
+        <span mat-menu-item *ngFor="let toggle of paletteToggles">
+            <mat-radio-button [value]="toggle.color" class="w-100" (click)="$event.stopPropagation()">
+                <span class="w-100 mx-75">{{toggle.label | transloco}}</span>
+                <mat-icon style="border-radius: 50%;margin: auto;min-width: 2rem;min-height: 2rem;"
+                          [ngStyle]="{'background': toggle.style}"></mat-icon>
+            </mat-radio-button>
+        </span>
+    </mat-radio-group>
+</mat-menu>
+
+

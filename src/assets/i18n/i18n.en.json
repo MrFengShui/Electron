@@ -43,6 +43,11 @@
     "DEMO.TIP.TUNE": "Settings",
 
     "DEMO.ICON.COPY": "Click to Copy Code",
+    "DEMO.ICON.COPIED": "Icon Code Copied",
+
+    "DEMO.ERROR.LINK": "Go Home",
+    "DEMO.ERROR.TITLE": "ERROR 404",
+    "DEMO.ERROR.SUBTITLE": "Page Not Found",
 
     "DEMO.SORT.RANDOM": "Generate Random Numbers",
     "DEMO.SORT.ORDER.ASCENT": "Ascent",

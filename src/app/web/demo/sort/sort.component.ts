@@ -16,7 +16,7 @@ import {
     DemoComparisonSortService, DemoDistributionSortService, DemoOtherSortService, DemoSortUtilityService, BaseType,
 } from "./sort.service";
 
-import {ToggleModel} from "../../global/model/global.model";
+import {ToggleModel} from "../../../global/model/global.model";
 
 interface SortMeta {
 
