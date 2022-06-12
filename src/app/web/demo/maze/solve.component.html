@@ -33,10 +33,12 @@
                 </ng-container>
 
                 <ng-container matColumnDef="time">
-                    <th mat-header-cell *matHeaderCellDef class="text-center px-50" style="white-space: nowrap">
+                    <th mat-header-cell *matHeaderCellDef class="text-right px-50" style="white-space: nowrap">
                         {{'DEMO.PUBLIC.TIME' | transloco}}
                     </th>
-                    <td mat-cell *matCellDef="let item" class="text-right px-50"> {{item.time | duration}} </td>
+                    <td mat-cell *matCellDef="let item" class="text-right px-50" style="white-space: nowrap">
+                        {{item.time | duration}}
+                    </td>
                 </ng-container>
 
                 <ng-container matColumnDef="data">
@@ -139,8 +141,7 @@
                     <input type="file" accept="application/json" class="d-none"
                            (change)="listenMazeSelectChange(browser)" #browser>
                 </button>
-                <button mat-flat-button color="primary" class="py-25" [disabled]="(cells$ | async)?.length === 0"
-                        (click)="handleToggleRunAction()">
+                <button mat-flat-button color="primary" class="py-25" (click)="handleToggleRunAction()">
                     <mat-icon>play_circle_outline</mat-icon>
                     <span class="ml-75">{{'DEMO.PUBLIC.START' | transloco}}</span>
                 </button>
@@ -158,12 +159,12 @@
             {{'DEMO.PUBLIC.GRID' | transloco}}: {{columns$ | async}}&nbsp;&times;&nbsp;{{rows$ | async}}
         </span>
         <span class="mat-title flex-fill my-0">
-            {{'DEMO.PUBLIC.STATUS' | transloco}}: {{phase$ | async | mss | transloco}}
+            {{'DEMO.PUBLIC.STATUS' | transloco}}: {{phase$ | async | mssp | transloco}}
         </span>
         <span class="mat-title flex-fill my-0">
             {{'DEMO.PUBLIC.TIME' | transloco}}: {{timer$ | async | duration}}
         </span>
-        <button mat-icon-button [disabled]="(phase$ | async) !== 0" (click)="handleToggleCloseAction()">
+        <button mat-icon-button [disabled]="(phase$ | async) !== -1" (click)="handleToggleCloseAction()">
             <mat-icon>close</mat-icon>
         </button>
     </mat-card-title-group>
@@ -172,10 +173,10 @@
         <div class="border b-primary" [class.bt-1]="cell.grid.bt" [class.bb-1]="cell.grid.bb"
              [class.bl-1]="cell.grid.bl" [class.br-1]="cell.grid.br" style="box-sizing: border-box"
              [class.bg-primary]="((marker$ | async)?.grid?.x === cell.grid.x
-                && (marker$ | async)?.grid?.y === cell.grid.y) || (group.value['startXCtrl'] === cell.grid.x
-                && group.value['startYCtrl'] === cell.grid.y)"
-             [class.bg-accent]="group.value['finalXCtrl'] === cell.grid.x
-                && group.value['finalYCtrl'] === cell.grid.y"
+                && (marker$ | async)?.grid?.y === cell.grid.y) || (group.controls['startXCtrl'].value === cell.grid.x
+                && group.controls['startYCtrl'].value === cell.grid.y)"
+             [class.bg-accent]="group.controls['finalXCtrl'].value === cell.grid.x
+                && group.controls['finalYCtrl'].value === cell.grid.y"
              [class.demo-maze-mark]="cell.visited" [class.demo-maze-path]="cell.marked"
              *ngFor="let cell of cells$ | async"></div>
     </mat-card-content>

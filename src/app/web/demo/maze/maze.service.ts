@@ -1,7 +1,6 @@
 import {Injectable} from "@angular/core";
 
 import {sleep} from "../../../global/utils/global.utils";
-import {drawBorderLine, fillGridColor} from "../../../global/utils/canvas.utils";
 
 export interface MazeGridType {
 

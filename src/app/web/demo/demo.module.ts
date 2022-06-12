@@ -7,16 +7,18 @@ import {TranslocoModule} from "@ngneat/transloco";
 import {GlobalCDKModule} from "../../global/module/cdk.module";
 import {GlobalMaterialModule} from "../../global/module/material.module";
 
+import {DurationPipe} from "../../global/pipe/duration.pipe";
+import {GameStatusPipe} from "./game/game.pipe";
+import {MazeCreateStatusPipe, MazeSolveStatusPipe} from "./maze/maze.pipe";
+import {SortOrderPipe, SortStatusPipe} from "./sort/sort.pipe";
+
 import {DemoOutletView} from "./demo.component";
 import {DemoIconView} from "./icon/icon.component";
 import {DemoMazeGenerateView} from "./maze/generate.component";
 import {DemoMazeSolveView} from "./maze/solve.component";
 import {DemoNavigationView} from "./navigation/navigation.component";
 import {DemoSortView} from "./sort/sort.component";
-
-import {DurationPipe} from "../../global/pipe/duration.pipe";
-import {MazeStatusPipe} from "./maze/maze.pipe";
-import {SortOrderPipe, SortStatusPipe} from "./sort/sort.pipe";
+import {DemoSnakeView} from "./game/snake.component";
 
 const routes: Routes = [
     {path: '', redirectTo: 'navigation', pathMatch: 'full'},
@@ -24,6 +26,7 @@ const routes: Routes = [
     {path: 'icon', component: DemoIconView},
     {path: 'maze/generate', component: DemoMazeGenerateView},
     {path: 'maze/solve', component: DemoMazeSolveView},
+    {path: 'game/snake', component: DemoSnakeView},
     {path: 'sort', component: DemoSortView}
 ];
 
@@ -34,9 +37,12 @@ const routes: Routes = [
         DemoMazeGenerateView,
         DemoMazeSolveView,
         DemoNavigationView,
+        DemoSnakeView,
         DemoSortView,
         DurationPipe,
-        MazeStatusPipe,
+        GameStatusPipe,
+        MazeCreateStatusPipe,
+        MazeSolveStatusPipe,
         SortOrderPipe,
         SortStatusPipe
     ],
@@ -55,9 +61,12 @@ const routes: Routes = [
         DemoMazeGenerateView,
         DemoMazeSolveView,
         DemoNavigationView,
+        DemoSnakeView,
         DemoSortView,
         DurationPipe,
-        MazeStatusPipe,
+        GameStatusPipe,
+        MazeCreateStatusPipe,
+        MazeSolveStatusPipe,
         SortOrderPipe,
         SortStatusPipe
     ]

@@ -7,7 +7,7 @@ import {NAV_LINKS} from "../../../global/utils/global.utils";
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'demo-navigation-view',
-    templateUrl: './navigation.component.html'
+    templateUrl: 'navigation.component.html'
 })
 export class DemoNavigationView {
 

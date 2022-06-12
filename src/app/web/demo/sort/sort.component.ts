@@ -17,6 +17,7 @@ import {
 } from "./sort.service";
 
 import {ToggleModel} from "../../../global/model/global.model";
+import {ThreeStateType} from "../../../global/utils/global.utils";
 
 interface SortMeta {
 
@@ -34,7 +35,7 @@ interface SortMeta {
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'demo-sort-view',
-    templateUrl: './sort.component.html',
+    templateUrl: 'sort.component.html',
     providers: [DemoSortUtilityService, DemoOtherSortService, DemoComparisonSortService, DemoDistributionSortService]
 })
 export class DemoSortView implements OnInit, OnDestroy {
@@ -56,7 +57,7 @@ export class DemoSortView implements OnInit, OnDestroy {
     timer$: Subject<number> = new BehaviorSubject<number>(0);
     columns$: Subject<number> = new BehaviorSubject<number>(0);
     shown$: Subject<boolean> = new BehaviorSubject<boolean>(false);
-    phase$: Subject<0 | 1 | 2> = new BehaviorSubject<0 | 1 | 2>(0);
+    phase$: Subject<ThreeStateType> = new BehaviorSubject<ThreeStateType>(0);
     select$: Subject<string> = new BehaviorSubject<string>('');
 
     readonly nameGroups: Array<{ label: string, toggles: ToggleModel<string>[] }> = [
@@ -208,15 +209,14 @@ export class DemoSortView implements OnInit, OnDestroy {
     }
 
     handleToggleRunAction(): void {
-        this.formEnableDisable(false);
         this.select$.next(this.fetch(this.group.value['nameCtrl']));
         this.shown$.next(true);
         this.timer$.next(0);
+        this.swapCount$.next(0);
+        this.auxCount$.next(0);
         let task = this._zone.run(() =>
             setTimeout(() => {
                 clearTimeout(task);
-                this.swapCount$.next(0);
-                this.auxCount$.next(0);
                 this._dsus.shuffle(this.dataset, value => {
                     this.phase$.next(1);
                     this.lhsPivotIndex$.next(value.lhsPivotIndex);
@@ -225,7 +225,7 @@ export class DemoSortView implements OnInit, OnDestroy {
                     this.time = 0;
                     this.swap = 0;
                     this.auxc = 0;
-                    this.phase$.next(2);
+                    this.phase$.next(1);
                     let subscription = timer(0, 10)
                         .subscribe(value => {
                             this.time = value;
@@ -253,7 +253,7 @@ export class DemoSortView implements OnInit, OnDestroy {
                 : Array.from(this._dsus.PROTOTYPE_DATASET).slice(0, length)
                     .map<DataType>(item => ({value: item, ratio: item / length}));
             this.dataset$.next(this.dataset);
-            this.formEnableDisable(true);
+            this.phase$.next(0);
         }
     }
 
@@ -992,26 +992,9 @@ export class DemoSortView implements OnInit, OnDestroy {
     private execComplete(length: number, speed: SpeedType, subscription: Subscription): void {
         this._dsus.complete(length, speed, value => this.currIndex$.next(value.currIndex))
             .then(() => {
-                this.phase$.next(0);
-                this.formEnableDisable(true);
+                this.phase$.next(-1);
                 subscription.unsubscribe();
             });
-    }
-
-    private formEnableDisable(flag: boolean): void {
-        if (flag) {
-            this.group.controls['flagCtrl'].enable();
-            this.group.controls['nameCtrl'].enable();
-            this.group.controls['speedCtrl'].enable();
-            this.group.controls['orderCtrl'].enable();
-            this.group.controls['sizeCtrl'].enable();
-        } else {
-            this.group.controls['flagCtrl'].disable();
-            this.group.controls['nameCtrl'].disable();
-            this.group.controls['speedCtrl'].disable();
-            this.group.controls['orderCtrl'].disable();
-            this.group.controls['sizeCtrl'].disable();
-        }
     }
 
 }

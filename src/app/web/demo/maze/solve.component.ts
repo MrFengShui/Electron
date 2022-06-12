@@ -25,6 +25,7 @@ import {
 } from "./maze.service";
 
 import {MazeGenerationMeta, MazeSaveMeta, ToggleModel} from "../../../global/model/global.model";
+import {ThreeStateType} from "../../../global/utils/global.utils";
 
 type MazeStartFinal = 'tlbr' | 'brtl' | 'bltr' | 'trbl' | 'tltr' | 'trtl' | 'blbr' | 'brbl' | 'tlbl' | 'bltl'
     | 'trbr' | 'brtr';
@@ -32,7 +33,7 @@ type MazeStartFinal = 'tlbr' | 'brtl' | 'bltr' | 'trbl' | 'tltr' | 'trtl' | 'blb
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'demo-maze-solve-view',
-    templateUrl: './solve.component.html',
+    templateUrl: 'solve.component.html',
     providers: [DemoMazeSolveAlgorithmService]
 })
 export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
@@ -57,7 +58,7 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
     usable$: Subject<boolean> = new BehaviorSubject<boolean>(true);
     timer$: Subject<number> = new BehaviorSubject<number>(0);
     shown$: Subject<boolean> = new BehaviorSubject<boolean>(false);
-    phase$: Subject<0 | 1 | 2> = new BehaviorSubject<0 | 1 | 2>(0);
+    phase$: Subject<ThreeStateType> = new BehaviorSubject<ThreeStateType>(0);
     select$: Subject<string> = new BehaviorSubject<string>('');
 
     readonly nameToggles: ToggleModel<string>[] = [
@@ -143,16 +144,19 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
                         if (value) {
                             this.cols = value.cols;
                             this.rows = value.rows;
-                            this.group.controls['startXCtrl'].setValue(Math.floor(Math.random() * this.cols));
-                            this.group.controls['startYCtrl'].setValue(Math.floor(Math.random() * this.rows));
-                            this.group.controls['finalXCtrl'].setValue(Math.floor(Math.random() * this.cols));
-                            this.group.controls['finalYCtrl'].setValue(Math.floor(Math.random() * this.rows));
-                            this.formEnableDisable(true);
+                            this.group.patchValue({
+                                startXCtrl: Math.floor(Math.random() * this.cols),
+                                startYCtrl: Math.floor(Math.random() * this.cols),
+                                finalXCtrl: Math.floor(Math.random() * this.cols),
+                                finalYCtrl: Math.floor(Math.random() * this.cols)
+                            });
+                            this.group.controls['nameCtrl'].enable();
+                            this.group.controls['speedCtrl'].enable();
+                            this.group.controls['diagonalCtrl'].enable();
                             this.cells = Array.from<MazeGridType>(JSON.parse(window.atob(value.data))).map(item =>
                                     ({grid: item, root: null, marked: false, visited: false}));
                         }
 
-                        this.cells$.next(this.cells);
                         this.columns$.next(this.cols);
                         this.rows$.next(this.rows);
                         subscription.unsubscribe();
@@ -276,7 +280,6 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     handleToggleRunAction(): void {
-        this.formEnableDisable(false);
         this.select$.next(this.fetch(this.group.value['nameCtrl']));
         this.shown$.next(true);
         this.timer$.next(0);
@@ -287,26 +290,26 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
                 cell.visited = false;
             });
             this.cells$.next(this.cells);
-            this.phase$.next(2);
-            let subscription = timer(0, 1000).subscribe(value => {
+            this.phase$.next(1);
+            let subscription = timer(0, 10).subscribe(value => {
                 this.time = value;
                 this.timer$.next(value);
             });
             let name: string = this.group.value['nameCtrl'];
-            let startX: number = coerceNumberProperty(this.group.value['startXCtrl']);
-            let startY: number = coerceNumberProperty(this.group.value['startYCtrl']);
-            let finalX: number = coerceNumberProperty(this.group.value['finalXCtrl']);
-            let finalY: number = coerceNumberProperty(this.group.value['finalYCtrl']);
             let speed: SpeedType = this.group.value['speedCtrl'];
+            let startX: number = coerceNumberProperty(this.group.controls['startXCtrl'].value);
+            let startY: number = coerceNumberProperty(this.group.controls['startYCtrl'].value);
+            let finalX: number = coerceNumberProperty(this.group.controls['finalXCtrl'].value);
+            let finalY: number = coerceNumberProperty(this.group.controls['finalYCtrl'].value);
             this.selectTask(name, startX, startY, finalX, finalY, speed, subscription);
         });
     }
 
     handleToggleCloseAction(): void {
-        let startX: number = coerceNumberProperty(this.group.value['startXCtrl']);
-        let startY: number = coerceNumberProperty(this.group.value['startYCtrl']);
-        let finalX: number = coerceNumberProperty(this.group.value['finalXCtrl']);
-        let finalY: number = coerceNumberProperty(this.group.value['finalYCtrl']);
+        let startX: number = coerceNumberProperty(this.group.controls['startXCtrl'].value);
+        let startY: number = coerceNumberProperty(this.group.controls['startYCtrl'].value);
+        let finalX: number = coerceNumberProperty(this.group.controls['finalXCtrl'].value);
+        let finalY: number = coerceNumberProperty(this.group.controls['finalYCtrl'].value);
         let array: MazeGenerationMeta[] = this.source.data;
         array.push({
             code: this.source.data.length + 1, name: this.fetch(this.group.value['nameCtrl']),
@@ -323,6 +326,7 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
         });
         this.source.data = array;
         this.shown$.next(false);
+        this.phase$.next(0);
     }
 
     handleToggleViewAction(item: MazeGenerationMeta): void {
@@ -379,8 +383,7 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
         this._service.mazeAStar(this.cells, startX, startY, finalX, finalY, speed,
             value => this.marker$.next(value))
             .then(() => {
-                this.phase$.next(0);
-                this.formEnableDisable(true);
+                this.phase$.next(-1);
                 subscription.unsubscribe();
             });
     }
@@ -390,8 +393,7 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
         this._service.mazeBackTracker(this.cells, startX, startY, finalX, finalY, speed,
             value => this.marker$.next(value))
             .then(() => {
-                this.phase$.next(0);
-                this.formEnableDisable(true);
+                this.phase$.next(-1);
                 subscription.unsubscribe();
             });
     }
@@ -401,8 +403,7 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
         this._service.mazeBFS(this.cells, startX, startY, finalX, finalY, speed,
             value => this.marker$.next(value))
             .then(() => {
-                this.phase$.next(0);
-                this.formEnableDisable(true);
+                this.phase$.next(-1);
                 subscription.unsubscribe();
             });
     }
@@ -410,10 +411,9 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
     private execDFS(startX: number, startY: number, finalX: number, finalY: number,
                     speed: SpeedType, subscription: Subscription): void {
         this._service.mazeDFS(this.cells, startX, startY, finalX, finalY, speed,
-            value => this.marker$.next(value))
+                value => this.marker$.next(value))
             .then(() => {
-                this.phase$.next(0);
-                this.formEnableDisable(true);
+                this.phase$.next(-1);
                 subscription.unsubscribe();
             });
     }
@@ -423,8 +423,7 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
         this._service.mazeDijkstra(this.cells, startX, startY, finalX, finalY, speed,
             value => this.marker$.next(value))
             .then(() => {
-                this.phase$.next(0);
-                this.formEnableDisable(true);
+                this.phase$.next(-1);
                 subscription.unsubscribe();
             });
     }
@@ -434,8 +433,7 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
         this._service.mazeFloodFill(this.cells, startX, startY, finalX, finalY, speed,
             value => this.marker$.next(value))
             .then(() => {
-                this.phase$.next(0);
-                this.formEnableDisable(true);
+                this.phase$.next(-1);
                 subscription.unsubscribe();
             });
     }
@@ -445,30 +443,9 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
         this._service.mazeGBFS(this.cells, startX, startY, finalX, finalY, speed,
             value => this.marker$.next(value))
             .then(() => {
-                this.phase$.next(0);
-                this.formEnableDisable(true);
+                this.phase$.next(-1);
                 subscription.unsubscribe();
             });
-    }
-
-    private formEnableDisable(flag: boolean): void {
-        if (flag) {
-            this.group.controls['nameCtrl'].enable();
-            this.group.controls['speedCtrl'].enable();
-            this.group.controls['diagonalCtrl'].enable();
-            this.group.controls['startXCtrl'].enable();
-            this.group.controls['startYCtrl'].enable();
-            this.group.controls['finalXCtrl'].enable();
-            this.group.controls['finalYCtrl'].enable();
-        } else {
-            this.group.controls['nameCtrl'].disable();
-            this.group.controls['speedCtrl'].disable();
-            this.group.controls['diagonalCtrl'].disable();
-            this.group.controls['startXCtrl'].disable();
-            this.group.controls['startYCtrl'].disable();
-            this.group.controls['finalXCtrl'].disable();
-            this.group.controls['finalYCtrl'].disable();
-        }
     }
 
 }

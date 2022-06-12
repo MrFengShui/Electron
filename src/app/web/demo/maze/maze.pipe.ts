@@ -1,15 +1,33 @@
 import {Pipe, PipeTransform} from "@angular/core";
 
-@Pipe({
-    name: 'mss'
-})
-export class MazeStatusPipe implements PipeTransform {
+import {ThreeStateType} from "../../../global/utils/global.utils";
 
-    transform(value: 0 | 1 | 2 | null): string {
+@Pipe({
+    name: 'mcsp'
+})
+export class MazeCreateStatusPipe implements PipeTransform {
+
+    transform(value: ThreeStateType | null): string {
         switch (value) {
-            case 0: return 'DEMO.MAZE.STATUS.MOUNT';
-            case 1: return 'DEMO.MAZE.STATUS.GEN';
-            case 2: return 'DEMO.MAZE.STATUS.SOL';
+            case -1: return 'DEMO.MAZE.STATUS.DONE';
+            case 0: return 'DEMO.MAZE.STATUS.READY';
+            case 1: return 'DEMO.MAZE.STATUS.CREATE';
+            default: return '';
+        }
+    }
+
+}
+
+@Pipe({
+    name: 'mssp'
+})
+export class MazeSolveStatusPipe implements PipeTransform {
+
+    transform(value: ThreeStateType | null): string {
+        switch (value) {
+            case -1: return 'DEMO.MAZE.STATUS.DONE';
+            case 0: return 'DEMO.MAZE.STATUS.READY';
+            case 1: return 'DEMO.MAZE.STATUS.SOLVE';
             default: return '';
         }
     }

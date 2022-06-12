@@ -1,16 +1,19 @@
 import {Pipe, PipeTransform} from "@angular/core";
+
 import {OrderType} from "./sort.service";
+
+import {ThreeStateType} from "../../../global/utils/global.utils";
 
 @Pipe({
     name: 'ssp'
 })
 export class SortStatusPipe implements PipeTransform {
 
-    transform(value: 0 | 1 | 2 | null): string {
+    transform(value: ThreeStateType | null): string {
         switch (value) {
-            case 0: return 'DEMO.SORT.STATUS.MOUNT';
-            case 1: return 'DEMO.SORT.STATUS.SHUFFLE';
-            case 2: return 'DEMO.SORT.STATUS.RUN';
+            case -1: return 'DEMO.SORT.STATUS.DONE';
+            case 0: return 'DEMO.SORT.STATUS.SHUFFLE';
+            case 1: return 'DEMO.SORT.STATUS.SORT';
             default: return '';
         }
     }

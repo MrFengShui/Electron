@@ -6,9 +6,11 @@ import {RouteLinkModel} from "../model/global.model";
 
 export type ColorType = 'spring' | 'summer' | 'autumn' | 'winter' | 'default';
 export type LocaleType = 'en' | 'zhs' | 'zht';
+export type ThreeStateType = -1 | 0 | 1;
 
 export const NAV_LINKS: RouteLinkModel[] = [
     {icon: 'image_search', link: ['/demo', 'icon'], text: 'DEMO.LIST.ICON'},
+    {icon: 'sports_esports', link: ['/demo', 'game', 'snake'], text: 'DEMO.LIST.GAME.SNAKE'},
     {icon: 'route', link: ['/demo', 'maze', 'generate'], text: 'DEMO.LIST.MAZEG'},
     {icon: 'route', link: ['/demo', 'maze', 'solve'], text: 'DEMO.LIST.MAZES'},
     {icon: 'sort_by_alpha', link: ['/demo', 'sort'], text: 'DEMO.LIST.SORT'}

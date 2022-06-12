@@ -76,7 +76,7 @@
             }
 
             .txt-#{$key}-#{$i * 100} {
-                color: mat.get-color-from-palette($value, $i * 100);
+                color: mat.get-color-from-palette($value, $i * 100) !important;
             }
         }
     }

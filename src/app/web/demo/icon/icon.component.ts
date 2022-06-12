@@ -14,7 +14,7 @@ import {Observable, of} from "rxjs";
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'demo-icon-view',
-    templateUrl: './icon.component.html'
+    templateUrl: 'icon.component.html'
 })
 export class DemoIconView implements AfterViewInit {
 

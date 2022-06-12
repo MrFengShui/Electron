@@ -2,7 +2,7 @@ import {createReducer, on} from "@ngrx/store";
 
 import {
     STORAGE_COLOR_LOAD_ACTION,
-    STORAGE_COLOR_SAVE_ACTION, STORAGE_LOCALE_LOAD_ACTION,
+    STORAGE_COLOR_SAVE_ACTION, STORAGE_INIT_ACTION, STORAGE_LOCALE_LOAD_ACTION,
     STORAGE_LOCALE_SAVE_ACTION, STORAGE_THEME_LOAD_ACTION,
     STORAGE_THEME_SAVE_ACTION
 } from "./storage.action";
@@ -14,14 +14,14 @@ let storage: Storage = window.sessionStorage;
 
 export interface StorageSaveLoadState {
 
-    locale: LocaleType;
-    color: ColorType;
-    theme: boolean;
+    locale: LocaleType | null;
+    color: ColorType | null;
+    theme: boolean | null;
 
 }
 
 export const STORAGE_REDUCER = createReducer<StorageSaveLoadState>(
-    {locale: 'en', color: 'default', theme: true},
+    {locale: null, color: null, theme: null},
     on(STORAGE_LOCALE_SAVE_ACTION, (state, props) => {
         storage.setItem('locale', `${props.payload}`);
         return {...state, locale: props.payload};
@@ -34,16 +34,16 @@ export const STORAGE_REDUCER = createReducer<StorageSaveLoadState>(
         storage.setItem('theme', `${props.payload}`);
         return {...state, theme: props.payload};
     }),
-    on(STORAGE_LOCALE_LOAD_ACTION, state => {
-        let value: string | null = storage.getItem('locale');
-        return {...state, locale: value === null ? 'en' : (value as LocaleType)};
+    on(STORAGE_INIT_ACTION, () => {
+        storage.setItem('locale', 'en');
+        storage.setItem('color', 'default');
+        storage.setItem('theme', `${true}`);
+        return {locale: 'en' as LocaleType, color: 'default' as ColorType, theme: true};
     }),
-    on(STORAGE_COLOR_LOAD_ACTION, state => {
-        let value: string | null = storage.getItem('color');
-        return {...state, color: value === null ? 'default' : (value as ColorType)};
-    }),
-    on(STORAGE_THEME_LOAD_ACTION, state => {
-        let value: string | null = storage.getItem('theme');
-        return {...state, theme: value === null ? true : coerceBooleanProperty(value)};
-    })
+    on(STORAGE_LOCALE_LOAD_ACTION, state =>
+        ({...state, locale: storage.getItem('locale') as (LocaleType | null)})),
+    on(STORAGE_COLOR_LOAD_ACTION, state =>
+        ({...state, color: storage.getItem('color') as (ColorType | null)})),
+    on(STORAGE_THEME_LOAD_ACTION, state =>
+        ({...state, theme: coerceBooleanProperty(storage.getItem('theme'))}))
 );

@@ -164,7 +164,7 @@
         <span class="mat-title flex-fill my-0">
             {{'DEMO.PUBLIC.TIME' | transloco}}: {{timer$ | async | duration: 'short'}}
         </span>
-        <button mat-icon-button [disabled]="(phase$ | async) !== 0" (click)="handleToggleCloseAction()">
+        <button mat-icon-button [disabled]="(phase$ | async) !== -1" (click)="handleToggleCloseAction()">
             <mat-icon>close</mat-icon>
         </button>
     </mat-card-title-group>

@@ -276,12 +276,17 @@ $text-map: left, right, center, justify;
     }
 }
 
+.demo-snake-view {
+    .demo-snake-view-wrapper {
+        border-radius: 0;
+        box-sizing: border-box;
+    }
+}
+
 .demo-sort-view {
     .demo-sort-view-wrapper {
         border-radius: 0;
         box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
     }
 
     .sort-grid {
@@ -294,9 +299,8 @@ $text-map: left, right, center, justify;
 
 .demo-maze-view {
     .demo-maze-view-wrapper {
+        border-radius: 0;
         box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
     }
 
     .maze-grid {

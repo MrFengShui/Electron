@@ -101,6 +101,7 @@
         "@angular/router": "~13.1.0",
         "@ngneat/transloco": "^4.0.0",
         "@ngrx/store": "^13.2.0",
+        "@ngrx/store-devtools": "^13.2.0",
         "p5": "^1.4.1",
         "rxjs": "~7.4.0",
         "tslib": "^2.3.0",

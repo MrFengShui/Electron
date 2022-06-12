@@ -1,7 +1,6 @@
 import {coerceNumberProperty} from "@angular/cdk/coercion";
 import {SelectionModel} from "@angular/cdk/collections";
 import {
-    AfterViewInit,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
@@ -24,14 +23,15 @@ import {
 } from "./maze.service";
 
 import {MazeGenerationMeta, MazeSaveMeta, ToggleModel} from "../../../global/model/global.model";
+import {ThreeStateType} from "../../../global/utils/global.utils";
 
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'demo-maze-generate-view',
-    templateUrl: './generate.component.html',
+    templateUrl: 'generate.component.html',
     providers: [DemoMazeGenerateAlgorithmService]
 })
-export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
+export class DemoMazeGenerateView implements OnInit, OnDestroy {
 
     @ViewChild('view', {read: TemplateRef})
     private view!: TemplateRef<any>;
@@ -51,7 +51,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
     usable$: Subject<boolean> = new BehaviorSubject<boolean>(true);
     timer$: Subject<number> = new BehaviorSubject<number>(0);
     shown$: Subject<boolean> = new BehaviorSubject<boolean>(false);
-    phase$: Subject<0 | 1 | 2> = new BehaviorSubject<0 | 1 | 2>(0);
+    phase$: Subject<ThreeStateType> = new BehaviorSubject<ThreeStateType>(0);
     select$: Subject<string> = new BehaviorSubject<string>('');
 
     readonly nameToggles: ToggleModel<string>[] = [
@@ -113,10 +113,6 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
         this.select = new SelectionModel<MazeGenerationMeta>(true, []);
     }
 
-    ngAfterViewInit() {
-
-    }
-
     ngOnDestroy() {
         this.cells$.complete();
         this.marker$.complete();
@@ -137,7 +133,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
         this.timer$.next(0);
         this._zone.runTask(() => {
             this.phase$.next(1);
-            let subscription = timer(0, 1000).subscribe(value => {
+            let subscription = timer(0, 10).subscribe(value => {
                 this.time = value;
                 this.timer$.next(value);
             });
@@ -296,10 +292,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
             if (value.currCell && value.nextCell) {
                 DemoMazeGenerateView.merge(value.currCell, value.nextCell);
             }
-        }).then(() => {
-            this.phase$.next(0);
-            subscription.unsubscribe();
-        });
+        }).then(() => this.complete(subscription));
     }
 
     private execBackTracker(speed: SpeedType, subscription: Subscription): void {
@@ -309,10 +302,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
             if (value.currCell && value.nextCell) {
                 DemoMazeGenerateView.merge(value.currCell, value.nextCell);
             }
-        }).then(() => {
-            this.phase$.next(0);
-            subscription.unsubscribe();
-        });
+        }).then(() => this.complete(subscription));
     }
 
     private execBinaryTree(direct: BinaryTreeDirection, cols: number, rows: number, speed: SpeedType,
@@ -323,10 +313,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
             if (value.currCell && value.nextCell) {
                 DemoMazeGenerateView.merge(value.currCell, value.nextCell);
             }
-        }).then(() => {
-            this.phase$.next(0);
-            subscription.unsubscribe();
-        });
+        }).then(() => this.complete(subscription));
     }
 
     private execEller(cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
@@ -340,10 +327,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
             if (value.currCell && value.nextCell) {
                 DemoMazeGenerateView.merge(value.currCell, value.nextCell);
             }
-        }).then(() => {
-            this.phase$.next(0);
-            subscription.unsubscribe();
-        });
+        }).then(() => this.complete(subscription));
     }
 
     private execGrowTree(speed: SpeedType, subscription: Subscription): void {
@@ -353,10 +337,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
             if (value.currCell && value.nextCell) {
                 DemoMazeGenerateView.merge(value.currCell, value.nextCell);
             }
-        }).then(() => {
-            this.phase$.next(0);
-            subscription.unsubscribe();
-        });
+        }).then(() => this.complete(subscription));
     }
 
     private execHuntKill(cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
@@ -367,10 +348,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
             if (value.currCell && value.nextCell) {
                 DemoMazeGenerateView.merge(value.currCell, value.nextCell);
             }
-        }).then(() => {
-            this.phase$.next(0);
-            subscription.unsubscribe();
-        });
+        }).then(() => this.complete(subscription));
     }
 
     private execKruskal(speed: SpeedType, subscription: Subscription): void {
@@ -382,10 +360,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
             if (value.currCell && value.nextCell) {
                 DemoMazeGenerateView.merge(value.currCell, value.nextCell);
             }
-        }).then(() => {
-            this.phase$.next(0);
-            subscription.unsubscribe();
-        });
+        }).then(() => this.complete(subscription));
     }
 
     private execPrim(speed: SpeedType, subscription: Subscription): void {
@@ -396,10 +371,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
             if (value.currCell && value.nextCell) {
                 DemoMazeGenerateView.merge(value.currCell, value.nextCell);
             }
-        }).then(() => {
-            this.phase$.next(0);
-            subscription.unsubscribe();
-        });
+        }).then(() => this.complete(subscription));
     }
 
     private execRandomDoubledBackTracker(cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
@@ -409,10 +381,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
             if (value.currCell && value.nextCell) {
                 DemoMazeGenerateView.merge(value.currCell, value.nextCell);
             }
-        }).then(() => {
-            this.phase$.next(0);
-            subscription.unsubscribe();
-        });
+        }).then(() => this.complete(subscription));
     }
 
     private execRandomDivider(cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
@@ -423,10 +392,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
                 if (value.currCell && value.nextCell) {
                     DemoMazeGenerateView.merge(value.currCell, value.nextCell);
                 }
-            }).then(() => {
-            this.phase$.next(0);
-            subscription.unsubscribe();
-        });
+            }).then(() => this.complete(subscription));
     }
 
     private execSideWinder(cols: number, rows: number, speed: number, subscription: Subscription): void {
@@ -436,10 +402,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
             if (value.currCell && value.nextCell) {
                 DemoMazeGenerateView.merge(value.currCell, value.nextCell);
             }
-        }).then(() => {
-            this.phase$.next(0);
-            subscription.unsubscribe();
-        });
+        }).then(() => this.complete(subscription));
     }
 
     private execWalson(speed: SpeedType, subscription: Subscription): void {
@@ -451,10 +414,12 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy, AfterViewInit {
             if (value.currCell && value.nextCell) {
                 DemoMazeGenerateView.merge(value.currCell, value.nextCell);
             }
-        }).then(() => {
-            this.phase$.next(0);
-            subscription.unsubscribe();
-        });
+        }).then(() => this.complete(subscription));
+    }
+
+    private complete(subscription: Subscription): void {
+        this.phase$.next(-1);
+        subscription.unsubscribe();
     }
 
     private buildMazeGrid(cols: number, rows: number): void {

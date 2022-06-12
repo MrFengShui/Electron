@@ -4,7 +4,7 @@ import {
     Component,
     HostBinding,
     HostListener,
-    Inject, NgZone, OnDestroy,
+    Inject, NgZone, OnDestroy, OnInit,
     Renderer2,
     TemplateRef,
     ViewChild
@@ -15,14 +15,14 @@ import {TranslocoService} from "@ngneat/transloco";
 import {Store} from "@ngrx/store";
 import {BehaviorSubject, interval, Subject, Subscription} from "rxjs";
 
-import {register} from "./global/utils/global.utils";
+import {LocaleType, register} from "./global/utils/global.utils";
 
 import {StorageSaveLoadState} from "./global/ngrx/storage.reducer";
 import {STORAGE_SELECTOR} from "./global/ngrx/storage.selector";
 import {
-    STORAGE_COLOR_SAVE_ACTION,
-    STORAGE_LOCALE_SAVE_ACTION,
-    STORAGE_THEME_SAVE_ACTION
+    STORAGE_COLOR_LOAD_ACTION,
+    STORAGE_INIT_ACTION, STORAGE_LOCALE_LOAD_ACTION,
+    STORAGE_THEME_LOAD_ACTION
 } from "./global/ngrx/storage.action";
 
 @Component({
@@ -37,7 +37,7 @@ import {
     templateUrl: './app.component.html',
     providers: [{provide: APP_BASE_HREF, useValue: '.'}]
 })
-export class AppComponent implements OnDestroy, AfterViewInit {
+export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
     @ViewChild('splash', {read: TemplateRef})
     private splash!: TemplateRef<any>;
@@ -70,7 +70,7 @@ export class AppComponent implements OnDestroy, AfterViewInit {
     private subscriptions: Subscription[] = [];
     private dialogRef: MatDialogRef<any> | null = null;
     private progress: number = 0;
-    private first: boolean = true;
+    private first!: boolean;
 
     constructor(
         private _ref: ApplicationRef,
@@ -89,24 +89,13 @@ export class AppComponent implements OnDestroy, AfterViewInit {
         this.subscriptions.push(subscription);
     }
 
+    ngOnInit() {
+        this.initStorageProperties();
+    }
+
     ngAfterViewInit() {
         // this.showSplashScreen();
-        let subscription = this._zone.runOutsideAngular(() =>
-            this._store.select(STORAGE_SELECTOR)
-                .subscribe(value => {
-                    if (this.first) {
-                        this._store.dispatch(STORAGE_LOCALE_SAVE_ACTION({payload: value.locale}));
-                        this._store.dispatch(STORAGE_COLOR_SAVE_ACTION({payload: value.color}));
-                        this._store.dispatch(STORAGE_THEME_SAVE_ACTION({payload: value.theme}));
-                        this.first = false;
-                    } else {
-                        this._service.setActiveLang(value.locale);
-                        register(value.locale);
-                        this._render.setAttribute(this._document.documentElement, 'class',
-                            `global-theme theme-${value.color} ${value.theme ? 'active' : ''}`);
-                    }
-                }));
-        this.subscriptions.push(subscription);
+        this.listenStoragePropertiesChange();
     }
 
     ngOnDestroy() {
@@ -115,6 +104,37 @@ export class AppComponent implements OnDestroy, AfterViewInit {
                 subscription.unsubscribe();
             }
         });
+    }
+
+    private initStorageProperties(): void {
+        this.first = window.sessionStorage.getItem('locale') === null
+            && window.sessionStorage.getItem('color') === null
+            && window.sessionStorage.getItem('theme') === null
+
+        if (this.first) {
+            this._store.dispatch(STORAGE_INIT_ACTION());
+        } else {
+            this._store.dispatch(STORAGE_LOCALE_LOAD_ACTION());
+            this._store.dispatch(STORAGE_COLOR_LOAD_ACTION());
+            this._store.dispatch(STORAGE_THEME_LOAD_ACTION());
+        }
+    }
+
+    private listenStoragePropertiesChange(): void {
+        let subscription = this._zone.runOutsideAngular(() =>
+            this._store.select(STORAGE_SELECTOR)
+                .subscribe(value => {
+                    if (value.locale !== null) {
+                        this._service.setActiveLang(value.locale as LocaleType);
+                        register(value.locale as LocaleType);
+                    }
+
+                    if (value.color !== null && value.theme !== null) {
+                        this._render.setAttribute(this._document.documentElement, 'class',
+                            `global-theme theme-${value.color} ${value.theme ? 'active' : ''}`);
+                    }
+                }));
+        this.subscriptions.push(subscription);
     }
 
     private execLoadingProgress(): void {

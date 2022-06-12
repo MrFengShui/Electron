@@ -45,7 +45,7 @@ interface LocaleToggleModel {
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'demo-outlet-view',
-    templateUrl: './demo.component.html'
+    templateUrl: 'demo.component.html'
 })
 export class DemoOutletView implements OnDestroy, AfterViewInit {
 
