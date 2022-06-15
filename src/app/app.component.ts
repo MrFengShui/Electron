@@ -9,7 +9,7 @@ import {
     TemplateRef,
     ViewChild
 } from '@angular/core';
-import {APP_BASE_HREF, DOCUMENT} from "@angular/common";
+import {DOCUMENT} from "@angular/common";
 import {MatDialog, MatDialogRef} from "@angular/material/dialog";
 import {TranslocoService} from "@ngneat/transloco";
 import {Store} from "@ngrx/store";
@@ -34,8 +34,7 @@ import {
         ])
     ],
     selector: 'app-root',
-    templateUrl: './app.component.html',
-    providers: [{provide: APP_BASE_HREF, useValue: '/dist/web'}]
+    templateUrl: './app.component.html'
 })
 export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
