@@ -46,17 +46,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
     @HostListener('window:load')
     private listenWindowOnload(): void {
-        let subscription = this._zone.runTask(() =>
-            this.progress$.subscribe(value => {
-                if (value === 100) {
-                    subscription.unsubscribe();
-
-                    let task = setTimeout(() => {
-                        clearTimeout(task);
-                        this.hideSplashScreen();
-                    }, 1000);
-                }
-            }));
+        this.execLoadingProgress();
     }
 
     bright$: Subject<boolean> = new BehaviorSubject<boolean>(false);
@@ -69,7 +59,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
     private subscriptions: Subscription[] = [];
     private dialogRef: MatDialogRef<any> | null = null;
-    private progress: number = 0;
     private first!: boolean;
 
     constructor(
@@ -94,7 +83,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     ngAfterViewInit() {
-        // this.showSplashScreen();
+        this.showSplashScreen();
         this.listenStoragePropertiesChange();
     }
 
@@ -138,13 +127,19 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execLoadingProgress(): void {
+        let progress: number = 0;
         let subscription = this._zone.runTask(() => interval(1000)
             .subscribe(value => {
                 this.bright$.next(value % 2 === 0);
-                this.progress += Math.random() * 5;
-                this.progress$.next(Math.min(this.progress, 100));
+                progress += Math.random() * 5;
+                progress = Math.min(progress, 100);
+                this.progress$.next(progress);
+
+                if (progress === 100) {
+                    this.hideSplashScreen();
+                    subscription.unsubscribe();
+                }
             }));
-        this.subscriptions.push(subscription);
     }
 
     private showSplashScreen(): void {
@@ -154,11 +149,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
                 panelClass: ['demo-splash-screen']
             });
         }
-
-        let subscription = this.dialogRef.afterOpened().subscribe(() => {
-            this.execLoadingProgress();
-            subscription.unsubscribe();
-        });
     }
 
     private hideSplashScreen(): void {

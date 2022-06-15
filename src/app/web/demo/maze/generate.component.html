@@ -95,9 +95,8 @@
                 <mat-form-field appearance="standard">
                     <mat-label>{{'DEMO.PUBLIC.DELAY' | transloco}}</mat-label>
                     <mat-select formControlName="speedCtrl">
-                        <mat-option disabled [value]="'none'">{{'DEMO.PUBLIC.SELECT' | transloco}}</mat-option>
                         <mat-option [value]="toggle.code" *ngFor="let toggle of speedToggles">
-                            <span>{{toggle.text | transloco}}</span>
+                            <span>{{toggle.text | transloco}}</span>&nbsp;
                             <span>({{toggle.code}}ms)</span>
                         </mat-option>
                     </mat-select>

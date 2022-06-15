@@ -119,7 +119,7 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
     ngOnInit() {
         this.group = this._builder.group({
             nameCtrl: new FormControl({value: 'none', disabled: true}, [Validators.required]),
-            speedCtrl: new FormControl({value: 'none', disabled: true}, [Validators.required]),
+            speedCtrl: new FormControl({value: 1, disabled: true}, [Validators.required]),
             diagonalCtrl: new FormControl({value: 'none', disabled: true}, [Validators.required]),
             startXCtrl: new FormControl({value: 0, disabled: true},
                 [Validators.required, Validators.pattern(/[0-9]+/)]),
@@ -301,7 +301,7 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
             let startY: number = coerceNumberProperty(this.group.controls['startYCtrl'].value);
             let finalX: number = coerceNumberProperty(this.group.controls['finalXCtrl'].value);
             let finalY: number = coerceNumberProperty(this.group.controls['finalYCtrl'].value);
-            this.selectTask(name, startX, startY, finalX, finalY, speed, subscription);
+            this.selectTask(name, startX, startY, finalX, finalY, this.cols, this.rows, speed, subscription);
         });
     }
 
@@ -352,35 +352,35 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private selectTask(name: string, startX: number, startY: number, finalX: number, finalY: number,
-                       speed: SpeedType, subscription: Subscription): void {
+                       cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
         switch (name) {
             case 'astar':
-                this.execAStar(startX, startY, finalX, finalY, speed, subscription);
+                this.execAStar(startX, startY, finalX, finalY, cols, rows, speed, subscription);
                 break;
             case 'rbt':
-                this.execBackTracker(startX, startY, finalX, finalY, speed, subscription);
+                this.execBackTracker(startX, startY, finalX, finalY, cols, rows, speed, subscription);
                 break;
             case 'bfs':
-                this.execBFS(startX, startY, finalX, finalY, speed, subscription);
+                this.execBFS(startX, startY, finalX, finalY, cols, rows, speed, subscription);
                 break;
             case 'dfs':
-                this.execDFS(startX, startY, finalX, finalY, speed, subscription);
+                this.execDFS(startX, startY, finalX, finalY, cols, rows, speed, subscription);
                 break;
             case 'dijk':
-                this.execDijkstra(startX, startY, finalX, finalY, speed, subscription);
+                this.execDijkstra(startX, startY, finalX, finalY, cols, rows, speed, subscription);
                 break;
             case 'flood':
-                this.execFloodFill(startX, startY, finalX, finalY, speed, subscription);
+                this.execFloodFill(startX, startY, finalX, finalY, cols, rows, speed, subscription);
                 break;
             case 'gbfs':
-                this.execGBFS(startX, startY, finalX, finalY, speed, subscription);
+                this.execGBFS(startX, startY, finalX, finalY, cols, rows, speed, subscription);
                 break;
         }
     }
 
     private execAStar(startX: number, startY: number, finalX: number, finalY: number,
-                      speed: SpeedType, subscription: Subscription): void {
-        this._service.mazeAStar(this.cells, startX, startY, finalX, finalY, speed,
+                      cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
+        this._service.mazeAStar(this.cells, startX, startY, finalX, finalY, cols, rows, speed,
             value => this.marker$.next(value))
             .then(() => {
                 this.phase$.next(-1);
@@ -389,8 +389,8 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execBackTracker(startX: number, startY: number, finalX: number, finalY: number,
-                          speed: SpeedType, subscription: Subscription): void {
-        this._service.mazeBackTracker(this.cells, startX, startY, finalX, finalY, speed,
+                            cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
+        this._service.mazeBackTracker(this.cells, startX, startY, finalX, finalY, cols, rows, speed,
             value => this.marker$.next(value))
             .then(() => {
                 this.phase$.next(-1);
@@ -399,8 +399,8 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execBFS(startX: number, startY: number, finalX: number, finalY: number,
-                    speed: SpeedType, subscription: Subscription): void {
-        this._service.mazeBFS(this.cells, startX, startY, finalX, finalY, speed,
+                    cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
+        this._service.mazeBFS(this.cells, startX, startY, finalX, finalY, cols, rows, speed,
             value => this.marker$.next(value))
             .then(() => {
                 this.phase$.next(-1);
@@ -409,8 +409,8 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execDFS(startX: number, startY: number, finalX: number, finalY: number,
-                    speed: SpeedType, subscription: Subscription): void {
-        this._service.mazeDFS(this.cells, startX, startY, finalX, finalY, speed,
+                    cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
+        this._service.mazeDFS(this.cells, startX, startY, finalX, finalY, cols, rows, speed,
                 value => this.marker$.next(value))
             .then(() => {
                 this.phase$.next(-1);
@@ -419,8 +419,8 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execDijkstra(startX: number, startY: number, finalX: number, finalY: number,
-                         speed: SpeedType, subscription: Subscription): void {
-        this._service.mazeDijkstra(this.cells, startX, startY, finalX, finalY, speed,
+                         cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
+        this._service.mazeDijkstra(this.cells, startX, startY, finalX, finalY, cols, rows, speed,
             value => this.marker$.next(value))
             .then(() => {
                 this.phase$.next(-1);
@@ -429,8 +429,8 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execFloodFill(startX: number, startY: number, finalX: number, finalY: number,
-                          speed: SpeedType, subscription: Subscription): void {
-        this._service.mazeFloodFill(this.cells, startX, startY, finalX, finalY, speed,
+                          cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
+        this._service.mazeFloodFill(this.cells, startX, startY, finalX, finalY, cols, rows, speed,
             value => this.marker$.next(value))
             .then(() => {
                 this.phase$.next(-1);
@@ -439,8 +439,8 @@ export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
     }
 
     private execGBFS(startX: number, startY: number, finalX: number, finalY: number,
-                          speed: SpeedType, subscription: Subscription): void {
-        this._service.mazeGBFS(this.cells, startX, startY, finalX, finalY, speed,
+                     cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
+        this._service.mazeGBFS(this.cells, startX, startY, finalX, finalY, cols, rows, speed,
             value => this.marker$.next(value))
             .then(() => {
                 this.phase$.next(-1);

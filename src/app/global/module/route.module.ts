@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import {PreloadAllModules, RouterModule, Routes} from '@angular/router';
 
 import {DemoErrorView} from "../../web/error/error.component";
+import {DemoTestView} from "../../web/test/test.component";
 import {DemoOutletView} from "../../web/demo/demo.component";
 
 const routes: Routes = [
@@ -9,6 +10,7 @@ const routes: Routes = [
     {path: 'demo', component: DemoOutletView, loadChildren: () =>
             import('../../web/demo/demo.module').then(module => module.WebDemoModule)},
     {path: 'error/404', component: DemoErrorView},
+    {path: 'test', component: DemoTestView},
     {path: '**', redirectTo: 'error/404', pathMatch: 'full'}
 ];
 

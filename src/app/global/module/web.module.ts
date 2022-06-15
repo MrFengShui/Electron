@@ -7,13 +7,15 @@ import {GlobalTranslateModule} from "./translate.module";
 import {WebDemoModule} from "../../web/demo/demo.module";
 
 import {DemoErrorView} from "../../web/error/error.component";
+import {DemoTestView} from "../../web/test/test.component";
 
 import {STORAGE_FEATURE_KEY} from "../ngrx/storage.selector";
 import {STORAGE_REDUCER} from "../ngrx/storage.reducer";
 
 @NgModule({
     declarations: [
-        DemoErrorView
+        DemoErrorView,
+        DemoTestView
     ],
     imports: [
         CommonModule,
@@ -23,7 +25,8 @@ import {STORAGE_REDUCER} from "../ngrx/storage.reducer";
         GlobalTranslateModule
     ],
     exports: [
-        DemoErrorView
+        DemoErrorView,
+        DemoTestView
     ]
 })
 export class GlobalWebModule {}

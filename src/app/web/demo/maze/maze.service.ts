@@ -58,42 +58,94 @@ export type BinaryTreeDirection = 'nw' | 'ne' | 'sw' | 'se';
 export type WalsonMoveDirection = 'n' | 's' | 'e' | 'w' | '';
 export type SpeedType = 1 | 10 | 100 | 250 | 500;
 
+type DividePair = { currCell: MazeCellType, nextCell: MazeCellType };
+
+const indexOfCell = (x: number, y: number, cols: number, rows: number): number => {
+    if (x < 0 || x >= cols || y < 0 || y >= rows) {
+        return -1;
+    }
+
+    return x + y * cols;
+}
+
 @Injectable()
 export class DemoMazeGenerateAlgorithmService {
 
     /**
      *
      * @param cells
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      */
-    public async mazeAldousBroder(cells: MazeCellType[], speed: number = 250,
+    public async mazeAldousBroder(cells: MazeCellType[], cols: number, rows: number, speed: SpeedType,
                                   callback: (_value: MazeReturnMeta) => void): Promise<void> {
-        let array: MazeCellType[] = Array.from(cells);
-        let currCell: MazeCellType = await array[Math.floor(Math.random() * array.length)], nextCell: MazeCellType;
+        let visited: MazeCellType[], count: number = cols * rows;
+        let currCell: MazeCellType = cells[Math.floor(Math.random() * cells.length)], nextCell: MazeCellType;
 
-        while (!array.every(item => item.visited)) {
+        while (count > 0) {
             currCell.visited = true;
-            await callback({currCell});
+            callback({currCell});
 
-            let neighbors: MazeCellType[] = DemoMazeGenerateAlgorithmService.neighbors(array, currCell)
+            let neighbors: MazeCellType[] = DemoMazeGenerateAlgorithmService.neighbors(cells, currCell, cols, rows)
                 .filter(neighbor => !neighbor.visited);
 
             if (neighbors.length > 0) {
                 nextCell = neighbors[Math.floor(Math.random() * neighbors.length)];
                 nextCell.visited = true;
-                await callback({currCell, nextCell});
+                callback({currCell, nextCell});
 
                 currCell = nextCell;
             } else {
-                let visited: MazeCellType[] = array.filter(item => item.visited);
+                visited = cells.filter(cell => cell.visited);
 
                 while (neighbors.every(neighbor => neighbor.visited)) {
                     currCell = visited[Math.floor(Math.random() * visited.length)];
-                    await callback({currCell});
+                    callback({currCell});
 
-                    neighbors = DemoMazeGenerateAlgorithmService.neighbors(array, currCell);
+                    neighbors = DemoMazeGenerateAlgorithmService.neighbors(cells, currCell, cols, rows);
                     await sleep(speed);
+                }
+            }
+
+            count = cells.filter(cell => !cell.visited).length;
+            await sleep(speed);
+        }
+
+        callback({});
+    }
+
+    /**
+     *
+     * @param cells
+     * @param cols
+     * @param rows
+     * @param speed
+     * @param callback
+     */
+    public async mazeBackTracker(cells: MazeCellType[], cols: number, rows: number, speed: SpeedType,
+                                 callback: (_value: MazeReturnMeta) => void): Promise<void> {
+        let stack: MazeCellType[] = [cells[Math.floor(Math.random() * cells.length)]];
+        let currCell: MazeCellType | undefined;
+
+        while (stack.length > 0) {
+            currCell = stack.pop();
+
+            if (currCell) {
+                currCell.visited = true;
+                callback({currCell});
+
+                let neighbors: MazeCellType[] = DemoMazeGenerateAlgorithmService.neighbors(cells, currCell, cols, rows)
+                    .filter(neighbor => !neighbor.visited);
+
+                if (neighbors.length > 0) {
+                    stack.push(currCell);
+
+                    let nextCell: MazeCellType = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    nextCell.visited = true;
+                    stack.push(nextCell);
+                    callback({currCell, nextCell});
                 }
             }
 
@@ -106,160 +158,72 @@ export class DemoMazeGenerateAlgorithmService {
     /**
      *
      * @param cells
-     * @param speed
-     * @param callback
-     */
-    public async mazeBackTracker(cells: MazeCellType[], speed: SpeedType,
-                                 callback: (_value: MazeReturnMeta) => void): Promise<void> {
-        let array: MazeCellType[] = Array.from(cells);
-        let currCell: MazeCellType | undefined = array[Math.floor(Math.random() * array.length)];
-        let stack: MazeCellType[] = [currCell];
-
-        while (!array.every(item => item.visited)) {
-            currCell = stack.pop();
-            DemoMazeGenerateAlgorithmService.rbtMerge(array, stack, currCell, callback);
-            await sleep(speed);
-        }
-
-        await callback({});
-    }
-
-
-    /**
-     *
-     * @param cells
-     * @param cols
-     * @param rows
-     * @param speed
-     * @param callback
-     */
-    public async mazeDoubleBackTracker(cells: MazeCellType[], cols: number, rows: number, speed: SpeedType,
-                                       callback: (_value: MazeReturnMeta) => void): Promise<void> {
-        let half: number = (cols - 1) >> 1, point: number = Math.floor(Math.random() * rows);
-        let lhsArray: MazeCellType[] = Array.from(cells).filter(item => item.grid.x >= 0 && item.grid.x <= half)
-            .filter(item => item.grid.y >= 0 && item.grid.y <= rows - 1);
-        let rhsArray: MazeCellType[] = Array.from(cells).filter(item => item.grid.x >= half + 1 && item.grid.x <= cols - 1)
-            .filter(item => item.grid.y >= 0 && item.grid.y <= rows - 1);
-        let lhsHalf: MazeCellType[] = Array.from(cells).filter(item => item.grid.x === half)
-            .filter(item => item.grid.y >= 0 && item.grid.y <= rows - 1);
-        let rhsHalf: MazeCellType[] = Array.from(cells).filter(item => item.grid.x === half + 1)
-            .filter(item => item.grid.y >= 0 && item.grid.y <= rows - 1);
-        let lhsCurrCell: MazeCellType | undefined = lhsArray[Math.floor(Math.random() * lhsArray.length)];
-        let rhsCurrCell: MazeCellType | undefined = rhsArray[Math.floor(Math.random() * rhsArray.length)];
-        let lhsStack: MazeCellType[] = [lhsCurrCell], rhsStack: MazeCellType[] = [rhsCurrCell];
-
-        while (!lhsArray.every(item => item.visited) || !rhsArray.every(item => item.visited)) {
-            lhsCurrCell = lhsStack.pop();
-            DemoMazeGenerateAlgorithmService.rbtMerge(lhsArray, lhsStack, lhsCurrCell, callback);
-            await sleep(speed);
-
-            rhsCurrCell = rhsStack.pop();
-            DemoMazeGenerateAlgorithmService.rbtMerge(rhsArray, rhsStack, rhsCurrCell, callback);
-            await sleep(speed);
-        }
-
-        callback({currCell: lhsHalf[point], nextCell: rhsHalf[point]});
-        await sleep(speed);
-        callback({});
-    }
-
-    /**
-     *
-     * @param array
-     * @param stack
-     * @param currCell
-     * @param callback
-     * @private
-     */
-    private static rbtMerge(array: MazeCellType[], stack: MazeCellType[], currCell: MazeCellType | undefined,
-                            callback: (_value: MazeReturnMeta) => void): void {
-        if (currCell) {
-            currCell.visited = true;
-            callback({currCell});
-
-            let neighbors: MazeCellType[] = DemoMazeGenerateAlgorithmService.neighbors(array, currCell)
-                .filter(neighbor => !neighbor.visited);
-
-            if (neighbors.length > 0) {
-                stack.push(currCell);
-
-                let nextCell: MazeCellType = neighbors[Math.floor(Math.random() * neighbors.length)];
-                nextCell.visited = true;
-                stack.push(nextCell);
-                callback({currCell, nextCell});
-            }
-        }
-    }
-
-    /**
-     *
-     * @param list
      * @param cols
      * @param rows
      * @param dir
      * @param speed
      * @param callback
      */
-    public async mazeBinaryTree(list: MazeCellType[], cols: number, rows: number, dir: BinaryTreeDirection,
-                                speed: number = 250,
-                                callback: (_value: MazeReturnMeta) => void): Promise<void> {
-        let array: MazeCellType[] = Array.from(list);
+    public async mazeBinaryTree(cells: MazeCellType[], cols: number, rows: number, dir: BinaryTreeDirection,
+                                speed: SpeedType, callback: (_value: MazeReturnMeta) => void): Promise<void> {
+        let currCell: MazeCellType, nextCell: MazeCellType | null = null;
 
-        for (let i = 0; i < array.length; i++) {
-            let currCell: MazeCellType = array[i];
+        for (let i = 0; i < cells.length; i++) {
+            currCell = cells[i];
             currCell.visited = true;
             callback({currCell})
 
             switch (dir) {
                 case 'nw':
-                    await DemoMazeGenerateAlgorithmService.binaryTreeNW(array, currCell, cols, rows, i, callback);
+                    DemoMazeGenerateAlgorithmService.binaryTreeNW(cells, currCell, nextCell, cols, rows, i, callback);
                     break;
                 case 'ne':
-                    await DemoMazeGenerateAlgorithmService.binaryTreeNE(array, currCell, cols, rows, i, callback);
+                    DemoMazeGenerateAlgorithmService.binaryTreeNE(cells, currCell, nextCell, cols, rows, i, callback);
                     break;
                 case 'sw':
-                    await DemoMazeGenerateAlgorithmService.binaryTreeSW(array, currCell, cols, rows, i, callback);
+                    DemoMazeGenerateAlgorithmService.binaryTreeSW(cells, currCell, nextCell, cols, rows, i, callback);
                     break;
                 case 'se':
-                    await DemoMazeGenerateAlgorithmService.binaryTreeSE(array, currCell, cols, rows, i, callback);
+                    DemoMazeGenerateAlgorithmService.binaryTreeSE(cells, currCell, nextCell, cols, rows, i, callback);
                     break;
             }
 
             await sleep(speed);
         }
 
-        await callback({});
+        nextCell = null;
+        callback({});
     }
 
     /**
      *
      * @param array
      * @param currCell
+     * @param nextCell
      * @param cols
      * @param rows
      * @param index
      * @param callback
      * @private
      */
-    private static async binaryTreeNW(array: MazeCellType[], currCell: MazeCellType, cols: number, rows: number,
-                                      index: number,
-                                      callback: (_value: MazeReturnMeta) => void): Promise<void> {
+    private static binaryTreeNW(array: MazeCellType[], currCell: MazeCellType, nextCell: MazeCellType | null,
+                                cols: number, rows: number, index: number,
+                                callback: (_value: MazeReturnMeta) => void): void {
         if (currCell.grid.x >= 0 && currCell.grid.x <= cols - 2 && currCell.grid.y === 0) {
-            let nextCell: MazeCellType = array[index + 1];
-            nextCell.visited = true;
-            await callback({currCell, nextCell});
+            nextCell = array[index + 1];
         }
 
         if (currCell.grid.x === 0 && currCell.grid.y >= 1 && currCell.grid.y <= rows - 1) {
-            let nextCell: MazeCellType = array[index - cols];
-            nextCell.visited = true;
-            await callback({currCell, nextCell});
+            nextCell = array[index - cols];
         }
 
         if (currCell.grid.x >= 1 && currCell.grid.x <= cols - 1 && currCell.grid.y >= 1 && currCell.grid.y <= rows - 1) {
-            let nextCell: MazeCellType = array[Math.random() <= 0.5 ? index - 1 : index - cols];
+            nextCell = array[Math.random() <= 0.5 ? index - 1 : index - cols];
+        }
+
+        if (nextCell !== null) {
             nextCell.visited = true;
-            await callback({currCell, nextCell});
+            callback({currCell, nextCell});
         }
     }
 
@@ -267,30 +231,32 @@ export class DemoMazeGenerateAlgorithmService {
      *
      * @param array
      * @param currCell
+     * @param nextCell
      * @param cols
      * @param rows
      * @param index
      * @param callback
      * @private
      */
-    private static async binaryTreeNE(array: MazeCellType[], currCell: MazeCellType, cols: number, rows: number, index: number,
-                                      callback: (_value: MazeReturnMeta) => void): Promise<void> {
+    private static binaryTreeNE(array: MazeCellType[], currCell: MazeCellType, nextCell: MazeCellType | null,
+                                cols: number, rows: number, index: number,
+                                callback: (_value: MazeReturnMeta) => void): void {
         if (currCell.grid.x >= 1 && currCell.grid.x <= cols - 1 && currCell.grid.y === 0) {
-            let nextCell: MazeCellType = array[index - 1];
-            nextCell.visited = true;
-            await callback({currCell, nextCell});
+            nextCell = array[index - 1];
+
         }
 
         if (currCell.grid.x === cols - 1 && currCell.grid.y >= 1 && currCell.grid.y <= rows - 1) {
-            let nextCell: MazeCellType = array[index - cols];
-            nextCell.visited = true;
-            await callback({currCell, nextCell});
+            nextCell = array[index - cols];
         }
 
         if (currCell.grid.x >= 0 && currCell.grid.x <= cols - 2 && currCell.grid.y >= 1 && currCell.grid.y <= rows - 1) {
-            let nextCell: MazeCellType = array[Math.random() <= 0.5 ? index + 1 : index - cols];
+            nextCell = array[Math.random() <= 0.5 ? index + 1 : index - cols];
+        }
+
+        if (nextCell !== null) {
             nextCell.visited = true;
-            await callback({currCell, nextCell});
+            callback({currCell, nextCell});
         }
     }
 
@@ -298,30 +264,31 @@ export class DemoMazeGenerateAlgorithmService {
      *
      * @param array
      * @param currCell
+     * @param nextCell
      * @param cols
      * @param rows
      * @param index
      * @param callback
      * @private
      */
-    private static async binaryTreeSW(array: MazeCellType[], currCell: MazeCellType, cols: number, rows: number, index: number,
-                                      callback: (_value: MazeReturnMeta) => void): Promise<void> {
+    private static binaryTreeSW(array: MazeCellType[], currCell: MazeCellType, nextCell: MazeCellType | null,
+                                cols: number, rows: number, index: number,
+                                callback: (_value: MazeReturnMeta) => void): void {
         if (currCell.grid.x === 0 && currCell.grid.y >= 0 && currCell.grid.y <= rows - 2) {
-            let nextCell: MazeCellType = array[index + cols];
-            nextCell.visited = true;
-            await callback({currCell, nextCell});
+            nextCell = array[index + cols];
         }
 
         if (currCell.grid.x >= 1 && currCell.grid.x <= cols - 1 && currCell.grid.y === rows - 1) {
-            let nextCell: MazeCellType = array[index - 1];
-            nextCell.visited = true;
-            await callback({currCell, nextCell});
+            nextCell = array[index - 1];
         }
 
         if (currCell.grid.x >= 1 && currCell.grid.x <= cols - 1 && currCell.grid.y >= 0 && currCell.grid.y <= rows - 2) {
-            let nextCell: MazeCellType = array[Math.random() <= 0.5 ? index - 1 : index + cols];
+            nextCell = array[Math.random() <= 0.5 ? index - 1 : index + cols];
+        }
+
+        if (nextCell !== null) {
             nextCell.visited = true;
-            await callback({currCell, nextCell});
+            callback({currCell, nextCell});
         }
     }
 
@@ -329,30 +296,32 @@ export class DemoMazeGenerateAlgorithmService {
      *
      * @param array
      * @param currCell
+     * @param nextCell
      * @param cols
      * @param rows
      * @param index
      * @param callback
      * @private
      */
-    private static async binaryTreeSE(array: MazeCellType[], currCell: MazeCellType, cols: number, rows: number, index: number,
-                                      callback: (_value: MazeReturnMeta) => void): Promise<void> {
+    private static binaryTreeSE(array: MazeCellType[], currCell: MazeCellType, nextCell: MazeCellType | null,
+                                cols: number, rows: number, index: number,
+                                callback: (_value: MazeReturnMeta) => void): void {
         if (currCell.grid.x === cols - 1 && currCell.grid.y >= 1 && currCell.grid.y <= rows - 1) {
-            let nextCell: MazeCellType = array[index - cols];
-            nextCell.visited = true;
-            await callback({currCell, nextCell});
+            nextCell = array[index - cols];
+
         }
 
         if (currCell.grid.x >= 0 && currCell.grid.x <= cols - 2 && currCell.grid.y === rows - 1) {
-            let nextCell: MazeCellType = array[index + 1];
-            nextCell.visited = true;
-            await callback({currCell, nextCell});
+            nextCell = array[index + 1];
         }
 
         if (currCell.grid.x >= 0 && currCell.grid.x <= cols - 2 && currCell.grid.y >= 0 && currCell.grid.y <= rows - 2) {
-            let nextCell: MazeCellType = array[Math.random() <= 0.5 ? index + 1 : index + cols];
+            nextCell = array[Math.random() <= 0.5 ? index + 1 : index + cols];
+        }
+
+        if (nextCell !== null) {
             nextCell.visited = true;
-            await callback({currCell, nextCell});
+            callback({currCell, nextCell});
         }
     }
 
@@ -486,33 +455,36 @@ export class DemoMazeGenerateAlgorithmService {
     /**
      *
      * @param cells
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      */
-    public async mazeGrowTree(cells: MazeCellType[], speed: SpeedType,
+    public async mazeGrowTree(cells: MazeCellType[], cols: number, rows: number, speed: SpeedType,
                               callback: (_value: MazeReturnMeta) => void): Promise<void> {
-        let array: MazeCellType[] = Array.from(cells), stack: MazeCellType[] = [];
-        let random: number = Math.floor(Math.random() * array.length);
-        let currCell: MazeCellType = array[random], nextCell: MazeCellType;
-        stack.push(currCell);
+        let random: number = Math.floor(Math.random() * cells.length), min: number, max: number;
+        let currCell: MazeCellType = cells[random], nextCell: MazeCellType;
+        let array: MazeCellType[] = [currCell], neighbors: MazeCellType[];
 
-        while (stack.length > 0) {
-            random = Math.floor(Math.random() * stack.length);
-            currCell = stack[random];
-            await callback({currCell});
+        while (array.length > 0) {
+            min = Math.floor(Math.random() * array.length);
+            max = Math.min(min + 7, array.length - 1);
+            random = Math.floor(Math.random() * (max - min + 1) + min);
+            currCell = array[random];
+            callback({currCell});
 
-            let neighbors: MazeCellType[] = DemoMazeGenerateAlgorithmService.neighbors(cells, currCell)
+            neighbors = DemoMazeGenerateAlgorithmService.neighbors(cells, currCell, cols, rows)
                 .filter(neighbor => !neighbor.visited);
 
             if (neighbors.length > 0) {
                 random = Math.floor(Math.random() * neighbors.length);
-                nextCell = await neighbors[random];
+                nextCell = neighbors[random];
                 nextCell.visited = true;
                 currCell.visited = true;
-                stack.push(nextCell);
-                await callback({currCell, nextCell});
+                array.push(nextCell);
+                callback({currCell, nextCell});
             } else {
-                stack.splice(random, 1);
+                array.splice(random, 1);
             }
 
             await sleep(speed);
@@ -531,24 +503,27 @@ export class DemoMazeGenerateAlgorithmService {
      */
     public async mazeHuntKill(cells: MazeCellType[], cols: number, rows: number, speed: number,
                               callback: (_value: MazeReturnMeta) => void): Promise<void> {
-        let array: MazeCellType[] = Array.from(cells);
-        let currCell: MazeCellType = array[Math.floor(Math.random() * array.length)], nextCell: MazeCellType;
+        let neighbors: MazeCellType[];
+        let currCell: MazeCellType = cells[Math.floor(Math.random() * cells.length)], nextCell: MazeCellType;
+        let count: number = cols * rows;
+
         currCell.visited = true;
 
-        while (!array.every(item => item.visited)) {
-            let neighbors: MazeCellType[] = DemoMazeGenerateAlgorithmService.neighbors(array, currCell)
+        while (count > 0) {
+            neighbors = DemoMazeGenerateAlgorithmService.neighbors(cells, currCell, cols, rows)
                 .filter(neighbor => !neighbor.visited);
 
             if (neighbors.length > 0) {
-                nextCell = await neighbors[Math.floor(Math.random() * neighbors.length)];
+                nextCell = neighbors[Math.floor(Math.random() * neighbors.length)];
                 nextCell.visited = true;
 
-                await callback({currCell, nextCell});
-                currCell = await nextCell;
+                callback({currCell, nextCell});
+                currCell = nextCell;
             } else {
-                currCell = await DemoMazeGenerateAlgorithmService.hunterSeek(array, cols, rows, speed, callback);
+                currCell = await DemoMazeGenerateAlgorithmService.hunterSeek(cells, cols, rows, speed, callback);
             }
 
+            count = cells.filter(cell => !cell.visited).length;
             await callback({currCell});
             await sleep(speed);
         }
@@ -567,22 +542,24 @@ export class DemoMazeGenerateAlgorithmService {
      */
     private static async hunterSeek(array: MazeCellType[], cols: number, rows: number, speed: number,
                                     callback: (_value: MazeReturnMeta) => void): Promise<MazeCellType> {
-        let currCell: MazeCellType | undefined = undefined, nextCell: MazeCellType | undefined = undefined;
+        let rowCells: MazeCellType[], neighbors: MazeCellType[], start: number, end: number;
+        let currCell: MazeCellType | null = null, nextCell: MazeCellType | null = null;
 
         for (let i = 0; i < rows; i++) {
-            let start: number = i * cols, end: number = start + cols - 1;
-            let rows: MazeCellType[] = array.slice(start, end + 1);
-            await callback({scanner: i});
+            start = i * cols;
+            end = start + cols - 1;
+            rowCells = array.slice(start, end + 1);
+            callback({scanner: i});
 
-            for (let j = 0; j < rows.length; j++) {
-                currCell = await rows[j];
+            for (let j = 0; j < rowCells.length; j++) {
+                currCell = rowCells[j];
 
                 if (!currCell.visited) {
-                    let neighbors: MazeCellType[] = DemoMazeGenerateAlgorithmService.neighbors(array, currCell)
+                    neighbors = DemoMazeGenerateAlgorithmService.neighbors(array, currCell, cols, rows)
                         .filter(neighbor => neighbor.visited);
 
                     if (neighbors.length > 0) {
-                        nextCell = await neighbors[Math.floor(Math.random() * neighbors.length)];
+                        nextCell = neighbors[Math.floor(Math.random() * neighbors.length)];
                         break;
                     }
                 }
@@ -603,23 +580,32 @@ export class DemoMazeGenerateAlgorithmService {
     /**
      *
      * @param cells
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      */
-    public async mazeKruskal(cells: MazeCellType[], speed: SpeedType,
+    public async mazeKruskal(cells: MazeCellType[], cols: number, rows: number, speed: SpeedType,
                              callback: (_value: MazeReturnMeta) => void): Promise<void> {
-        let array: MazeCellType[] = Array.from(cells), neighbors: MazeCellType[] = [];
-        let currCell: MazeCellType, nextCell: MazeCellType, random: number = -1, weight: number = 0;
+        let neighbors: MazeCellType[] = [], currCell: MazeCellType, nextCell: MazeCellType;
+        let weight: number = 0, count: number = 0;
 
-        while (!array.every(item => item.visited)) {
-            random = Math.floor(Math.random() * array.length);
-            currCell = await array[random];
+        while (count !== cells.length) {
+            currCell = cells[Math.floor(Math.random() * cells.length)];
+            callback({currCell});
 
-            neighbors = DemoMazeGenerateAlgorithmService.neighbors(array, currCell);
-            random = Math.floor(Math.random() * neighbors.length);
-            nextCell = await neighbors[random];
+            neighbors = DemoMazeGenerateAlgorithmService.neighbors(cells, currCell, cols, rows)
+                .filter(neighbor => neighbor.weight !== currCell.weight);
 
-            weight = await DemoMazeGenerateAlgorithmService.kruskalCheck(array, currCell, nextCell, weight, callback);
+            if (neighbors.length > 0) {
+                nextCell = neighbors[Math.floor(Math.random() * neighbors.length)];
+                weight = nextCell.weight as number;
+                callback({currCell, nextCell});
+
+                cells.filter(cell => cell.weight === weight).forEach(cell => cell.weight = currCell.weight);
+            }
+
+            count = cells.filter(cell => cell.weight === cells[0].weight).length;
             await sleep(speed);
         }
 
@@ -628,82 +614,33 @@ export class DemoMazeGenerateAlgorithmService {
 
     /**
      *
-     * @param array
-     * @param currCell
-     * @param nextCell
-     * @param weight
-     * @param callback
-     * @private
-     */
-    private static async kruskalCheck(array: MazeCellType[], currCell: MazeCellType, nextCell: MazeCellType,
-                                      weight: number,
-                                      callback: (_value: MazeReturnMeta) => void): Promise<number> {
-        if (currCell.weight === 0 && nextCell.weight === 0) {
-            weight += 1;
-
-            currCell.weight = weight;
-            currCell.visited = true;
-
-            nextCell.weight = weight;
-            nextCell.visited = true;
-
-            await callback({currCell, nextCell});
-        } else if (currCell.weight === 0 && nextCell.weight !== 0) {
-            weight += 1;
-
-            currCell.weight = weight;
-            currCell.visited = true;
-
-            await callback({currCell, nextCell});
-
-            let maxWeight: number = Math.max(currCell.weight, nextCell.weight as number);
-            await array.filter(item => item.weight === maxWeight).forEach(item =>
-                item.weight = Math.min(currCell?.weight as number, nextCell.weight as number));
-        } else if (currCell.weight !== 0 && nextCell.weight === 0) {
-            nextCell.weight = currCell.weight;
-            nextCell.visited = true;
-
-            await callback({currCell, nextCell});
-        } else {
-            if (currCell.weight !== nextCell.weight) {
-                await callback({currCell, nextCell});
-
-                let maxWeight: number = Math.max(currCell.weight as number, nextCell.weight as number);
-                await array.filter(item => item.weight === maxWeight).forEach(item =>
-                    item.weight = Math.min(currCell.weight as number, nextCell.weight as number));
-            }
-        }
-
-        return weight;
-    }
-
-    /**
-     *
      * @param cells
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      */
-    public async mazePrim(cells: MazeCellType[], speed: SpeedType,
+    public async mazePrim(cells: MazeCellType[], cols: number, rows: number, speed: SpeedType,
                           callback: (_value: MazeReturnMeta) => void): Promise<void> {
-        let array: MazeCellType[] = Array.from(cells), neighbors: MazeCellType[];
-        let adjacents: MazeCellType[] = [array[Math.floor(Math.random() * array.length)]];
-        let currCell: MazeCellType, nextCell: MazeCellType;
+        let neighbors: MazeCellType[], visits: MazeCellType[];
+        let adjacents: MazeCellType[] = [cells[Math.floor(Math.random() * cells.length)]];
+        let currCell: MazeCellType, nextCell: MazeCellType, min: number, max: number;
 
-        while (!array.every(item => item.visited)) {
-            currCell = adjacents.splice(Math.floor(Math.random() * adjacents.length), 1)[0];
+        while (adjacents.length > 0) {
+            min = Math.floor(Math.random() * adjacents.length);
+            max = Math.min(min + 7, adjacents.length - 1);
+            currCell = adjacents.splice(Math.floor(Math.random() * (max - min + 1) + min), 1)[0];
             currCell.visited = true;
 
-            neighbors = DemoMazeGenerateAlgorithmService.neighbors(array, currCell)
-                .filter(neighbor => neighbor.visited);
+            neighbors = DemoMazeGenerateAlgorithmService.neighbors(cells, currCell, cols, rows);
+            visits = neighbors.filter(neighbor => neighbor.visited);
 
-            if (neighbors.length > 0) {
-                nextCell = neighbors[Math.floor(Math.random() * neighbors.length)];
+            if (visits.length > 0) {
+                nextCell = visits[Math.floor(Math.random() * visits.length)];
                 callback({currCell, nextCell});
             }
 
-            neighbors = DemoMazeGenerateAlgorithmService.neighbors(array, currCell)
-                .filter(neighbor => !neighbor.visited);
-            neighbors.forEach(neighbor => {
+            neighbors.filter(neighbor => !neighbor.visited).forEach(neighbor => {
                 if (adjacents.filter(adjacent =>
                     adjacent.grid.x === neighbor.grid.x && adjacent.grid.y === neighbor.grid.y).length === 0) {
                     adjacents.push(neighbor);
@@ -712,12 +649,14 @@ export class DemoMazeGenerateAlgorithmService {
             await sleep(speed);
         }
 
-        await callback({});
+        callback({});
     }
 
     /**
      *
      * @param cells
+     * @param cols
+     * @param rows
      * @param minCol
      * @param maxCol
      * @param minRow
@@ -725,51 +664,62 @@ export class DemoMazeGenerateAlgorithmService {
      * @param speed
      * @param callback
      */
-    public async mazeRandomDivider(cells: MazeCellType[], minCol: number, maxCol: number, minRow: number, maxRow: number,
-                                   speed: SpeedType, callback: (_value: MazeReturnMeta) => void): Promise<void> {
-        let width: number = maxCol - minCol + 1, height: number = maxRow - minRow + 1;
-        let direction: boolean = DemoMazeGenerateAlgorithmService.divideDirection(width, height);
-        let neighbors: MazeCellType[], fstCells: MazeCellType[], sndCells: MazeCellType[];
-        let currCell: MazeCellType = cells[Math.floor(Math.random() * cells.length)], nextCell: MazeCellType;
+    public async mazeRandomDivider(cells: MazeCellType[], cols: number, rows: number, minCol: number, maxCol: number,
+                                   minRow: number, maxRow: number, speed: SpeedType,
+                                   callback: (_value: MazeReturnMeta) => void): Promise<void> {
+        let dir: boolean = DemoMazeGenerateAlgorithmService
+            .divideDirection(maxCol - minCol + 1, maxRow - minRow + 1);
+        let fstCells: MazeCellType[], sndCells: MazeCellType[];
+        let pair: DividePair = DemoMazeGenerateAlgorithmService
+            .dividePairCells(cells, dir, minCol, maxCol, minRow, maxRow);
+        callback({currCell: pair.currCell, nextCell: pair.nextCell});
+        await sleep(speed);
 
-        neighbors = DemoMazeGenerateAlgorithmService.neighbors(cells, currCell)
-            .filter(neighbor => {
-                if (direction) {
-                    return neighbor.grid.x === currCell.grid.x + 1 || neighbor.grid.x === currCell.grid.x - 1;
-                } else {
-                    return neighbor.grid.y === currCell.grid.y + 1 || neighbor.grid.y === currCell.grid.y - 1;
-                }
-            });
-
-        if (neighbors.length > 0) {
-            nextCell = neighbors[Math.floor(Math.random() * neighbors.length)];
-            callback({currCell, nextCell});
-            await sleep(speed);
-
-            if (cells.length > 2) {
-                if (direction) {
-                    fstCells = cells.filter(item =>
-                        item.grid.x >= minCol && item.grid.x <= Math.min(currCell.grid.x, nextCell.grid.x));
-                    sndCells = cells.filter(item =>
-                        item.grid.x >= Math.max(currCell.grid.x, nextCell.grid.x) && item.grid.x <= maxCol);
-                    await this.mazeRandomDivider(fstCells, minCol, Math.min(currCell.grid.x, nextCell.grid.x),
-                        minRow, maxRow, speed, callback);
-                    await this.mazeRandomDivider(sndCells, Math.max(currCell.grid.x, nextCell.grid.x), maxCol,
-                        minRow, maxRow, speed, callback);
-                } else {
-                    fstCells = cells.filter(item =>
-                        item.grid.y >= minRow && item.grid.y <= Math.min(currCell.grid.y, nextCell.grid.y));
-                    sndCells = cells.filter(item =>
-                        item.grid.y >= Math.max(currCell.grid.y, nextCell.grid.y) && item.grid.y <= maxRow);
-                    await this.mazeRandomDivider(fstCells, minCol, maxCol,
-                        minRow, Math.min(currCell.grid.y, nextCell.grid.y), speed, callback);
-                    await this.mazeRandomDivider(sndCells, minCol, maxCol,
-                        Math.max(currCell.grid.y, nextCell.grid.y), maxRow, speed, callback);
-                }
+        if (cells.length > 2) {
+            if (dir) {
+                fstCells = cells.filter(item =>
+                    item.grid.x >= minCol && item.grid.x <= Math.min(pair.currCell.grid.x, pair.nextCell.grid.x));
+                sndCells = cells.filter(item =>
+                    item.grid.x >= Math.max(pair.currCell.grid.x, pair.nextCell.grid.x) && item.grid.x <= maxCol);
+                await this.mazeRandomDivider(fstCells, cols, rows, minCol,
+                    Math.min(pair.currCell.grid.x, pair.nextCell.grid.x), minRow, maxRow, speed, callback);
+                await this.mazeRandomDivider(sndCells, cols, rows,
+                    Math.max(pair.currCell.grid.x, pair.nextCell.grid.x), maxCol, minRow, maxRow, speed, callback);
+            } else {
+                fstCells = cells.filter(item =>
+                    item.grid.y >= minRow && item.grid.y <= Math.min(pair.currCell.grid.y, pair.nextCell.grid.y));
+                sndCells = cells.filter(item =>
+                    item.grid.y >= Math.max(pair.currCell.grid.y, pair.nextCell.grid.y) && item.grid.y <= maxRow);
+                await this.mazeRandomDivider(fstCells, cols, rows, minCol, maxCol,
+                    minRow, Math.min(pair.currCell.grid.y, pair.nextCell.grid.y), speed, callback);
+                await this.mazeRandomDivider(sndCells, cols, rows, minCol, maxCol,
+                    Math.max(pair.currCell.grid.y, pair.nextCell.grid.y), maxRow, speed, callback);
             }
         }
 
         callback({});
+    }
+
+    /**
+     *
+     * @param cells
+     * @param dir
+     * @param minCol
+     * @param maxCol
+     * @param minRow
+     * @param maxRow
+     * @private
+     */
+    private static dividePairCells(cells: MazeCellType[], dir: boolean, minCol: number, maxCol: number,
+                                   minRow: number, maxRow: number): DividePair {
+        let x1: number = Math.floor(Math.random() * (maxCol - minCol) + minCol);
+        let y1: number = Math.floor(Math.random() * (maxRow - minRow) + minRow);
+        let x2: number = dir ? (x1 === minCol ? x1 + 1 : (Math.random() <= 0.5 ? x1 - 1 : x1 + 1)) : x1;
+        let y2: number = dir ? y1 : (y1 === minRow ? y1 + 1 : (Math.random() <= 0.5 ? y1 - 1 : y1 + 1));
+        return {
+            currCell: cells.filter(cell => cell.grid.x === x1 && cell.grid.y === y1)[0],
+            nextCell: cells.filter(cell => cell.grid.x === x2 && cell.grid.y === y2)[0]
+        };
     }
 
     /**
@@ -798,16 +748,18 @@ export class DemoMazeGenerateAlgorithmService {
      */
     public async mazeSideWinder(cells: MazeCellType[], cols: number, rows: number, speed: number,
                                 callback: (_value: MazeReturnMeta) => void): Promise<void> {
-        let array: MazeCellType[] = Array.from(cells), currRow: MazeCellType[], prevRow: MazeCellType[] = [];
+        let currRow: MazeCellType[], prevRow: MazeCellType[] = [];
         let map: MazeSetType = {}, start: number, end: number;
 
         for (let i = 0; i < rows; i++) {
             start = i * cols;
             end = start + cols;
-            currRow = array.slice(start, end);
+            currRow = cells.slice(start, end);
 
             if (i > 0) {
                 currRow = await DemoMazeGenerateAlgorithmService.winderGroup(currRow, map);
+                Object.keys(map).forEach(key => map[key].length = 0);
+                map = {};
             }
 
             for (let j = 0; j < cols; j++) {
@@ -869,36 +821,35 @@ export class DemoMazeGenerateAlgorithmService {
             }
         }
 
-        Object.keys(map).forEach(key => map[key].length = 0);
-        map = {};
         return row;
     }
 
     /**
      *
      * @param cells
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      */
-    public async mazeWalson(cells: MazeCellType[], speed: number,
+    public async mazeWalson(cells: MazeCellType[], cols: number, rows: number, speed: number,
                             callback: (_value: MazeReturnMeta) => void): Promise<void> {
-        let array: MazeCellType[] = Array.from(cells), unvisited: MazeCellType[] = array.filter(item => !item.visited);
-        let startCell: MazeCellType, finalCell: MazeCellType;
+        let unvisited: MazeCellType[] = cells.filter(cell => !cell.visited);
+        let startCell: MazeCellType, finalCell: MazeCellType, count: number = cols * rows;
 
         startCell = unvisited[Math.floor(Math.random() * unvisited.length)];
-        unvisited = array.filter(item => item.grid.x !== startCell.grid.y && item.grid.y !== startCell.grid.y);
+        unvisited = cells.filter(cell => cell.grid.x !== startCell.grid.y && cell.grid.y !== startCell.grid.y);
         finalCell = unvisited[Math.floor(Math.random() * unvisited.length)];
         finalCell.visited = true;
+        callback({startCell, finalCell});
 
-        await callback({startCell, finalCell});
+        while (count > 0) {
+            finalCell = await DemoMazeGenerateAlgorithmService.walsonSeek(cells, startCell, finalCell, cols, rows,
+                cols * rows - count, speed, callback);
+            await DemoMazeGenerateAlgorithmService.walsonMove(cells, startCell, finalCell, cols, rows, speed, callback);
 
-        while (!array.every(item => item.visited)) {
-            finalCell = await DemoMazeGenerateAlgorithmService.walsonSeek(array, startCell, finalCell, speed, callback);
-
-            await callback({startCell, finalCell});
-            await DemoMazeGenerateAlgorithmService.walsonMove(array, startCell, finalCell, speed, callback);
-
-            unvisited = array.filter(item => !item.visited);
+            unvisited = cells.filter(cell => !cell.visited);
+            count = unvisited.length;
             startCell = unvisited[Math.floor(Math.random() * unvisited.length)];
             await sleep(speed);
         }
@@ -908,27 +859,40 @@ export class DemoMazeGenerateAlgorithmService {
 
     /**
      *
-     * @param array
+     * @param cells
      * @param startCell
      * @param finalCell
+     * @param cols
+     * @param rows
+     * @param count
      * @param speed
      * @param callback
      * @private
      */
-    private static async walsonSeek(array: MazeCellType[], startCell: MazeCellType, finalCell: MazeCellType, speed: number,
+    private static async walsonSeek(cells: MazeCellType[], startCell: MazeCellType, finalCell: MazeCellType,
+                                    cols: number, rows: number, count: number, speed: number,
                                     callback: (__value: MazeReturnMeta) => void): Promise<MazeCellType> {
-        let neighbors: MazeCellType[];
-        let currCell: MazeCellType = startCell, nextCell: MazeCellType;
+        let neighbors: MazeCellType[], currCell: MazeCellType = startCell, nextCell: MazeCellType;
+
+        if (count === 0) {
+            callback({startCell, finalCell});
+        } else {
+            callback({startCell});
+        }
 
         while (!currCell.visited) {
-            neighbors = DemoMazeGenerateAlgorithmService.neighbors(array, currCell);
+            neighbors = DemoMazeGenerateAlgorithmService.neighbors(cells, currCell, cols, rows);
             nextCell = neighbors[Math.floor(Math.random() * neighbors.length)];
             currCell.goto = DemoMazeGenerateAlgorithmService.matchNEWS(currCell, nextCell);
 
-            await callback({currCell, startCell, finalCell});
-            await sleep(speed);
+            if (count === 0) {
+                callback({currCell, startCell, finalCell});
+            } else {
+                callback({currCell, startCell});
+            }
 
             currCell = nextCell;
+            await sleep(speed);
         }
 
         return currCell;
@@ -936,30 +900,33 @@ export class DemoMazeGenerateAlgorithmService {
 
     /**
      *
-     * @param array
+     * @param cells
      * @param startCell
      * @param finalCell
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      * @private
      */
-    private static async walsonMove(array: MazeCellType[], startCell: MazeCellType, finalCell: MazeCellType, speed: number,
+    private static async walsonMove(cells: MazeCellType[], startCell: MazeCellType, finalCell: MazeCellType,
+                                    cols: number, rows: number, speed: number,
                                     callback: (__value: MazeReturnMeta) => void): Promise<void> {
         let currCell: MazeCellType = startCell, nextCell: MazeCellType | undefined;
 
         while (!(currCell.grid.x === finalCell.grid.x && currCell.grid.y === finalCell.grid.y)) {
             currCell.visited = true;
-            nextCell = DemoMazeGenerateAlgorithmService.seekNEWS(array, currCell);
+            nextCell = DemoMazeGenerateAlgorithmService.seekNEWS(cells, currCell, cols, rows);
 
             if (nextCell) {
                 nextCell.visited = true;
-                await callback({currCell, nextCell});
-                await sleep(speed);
+                callback({currCell, nextCell});
                 currCell = nextCell;
+                await sleep(speed);
             }
         }
 
-        await callback({currCell, finalCell});
+        await callback({currCell});
     }
 
     /**
@@ -992,52 +959,88 @@ export class DemoMazeGenerateAlgorithmService {
      *
      * @param cells
      * @param cell
+     * @param cols
+     * @param rows
      * @private
      */
-    private static seekNEWS(cells: MazeCellType[], cell: MazeCellType): MazeCellType | undefined {
-        return cells.find(item => {
-            switch (cell.goto) {
-                case 'n':
-                    return item.grid.x === cell.grid.x && item.grid.y === cell.grid.y - 1;
-                case 's':
-                    return item.grid.x === cell.grid.x && item.grid.y === cell.grid.y + 1;
-                case 'e':
-                    return item.grid.x === cell.grid.x + 1 && item.grid.y === cell.grid.y;
-                case 'w':
-                    return item.grid.x === cell.grid.x - 1 && item.grid.y === cell.grid.y;
-                default:
-                    return false;
-            }
-        });
+    private static seekNEWS(cells: MazeCellType[], cell: MazeCellType,
+                            cols: number, rows: number): MazeCellType | undefined {
+        let index: number = -1;
+
+        switch (cell.goto) {
+            case 'n':
+                index = indexOfCell(cell.grid.x, cell.grid.y - 1, cols, rows);
+                break;
+            case 's':
+                index = indexOfCell(cell.grid.x, cell.grid.y + 1, cols, rows);
+                break;
+            case 'w':
+                index = indexOfCell(cell.grid.x - 1, cell.grid.y, cols, rows);
+                break;
+            case 'e':
+                index = indexOfCell(cell.grid.x + 1, cell.grid.y, cols, rows);
+                break;
+        }
+
+        return cells[index];
+    }
+
+    /**
+     *
+     * @param currCell
+     * @param nextCell
+     */
+    public mergeCells(currCell: MazeCellType, nextCell: MazeCellType): void {
+        if (currCell.grid.y + 1 === nextCell.grid.y) {
+            currCell.grid.bb = false;
+            nextCell.grid.bt = false;
+        }
+
+        if (currCell.grid.y - 1 === nextCell.grid.y) {
+            currCell.grid.bt = false;
+            nextCell.grid.bb = false;
+        }
+
+        if (currCell.grid.x + 1 === nextCell.grid.x) {
+            currCell.grid.br = false;
+            nextCell.grid.bl = false;
+        }
+
+        if (currCell.grid.x - 1 === nextCell.grid.x) {
+            currCell.grid.bl = false;
+            nextCell.grid.br = false;
+        }
     }
 
     /**
      *
      * @param cells
      * @param cell
+     * @param cols
+     * @param rows
      * @private
      */
-    private static neighbors(cells: MazeCellType[], cell: MazeCellType): MazeCellType[] {
+    private static neighbors(cells: MazeCellType[], cell: MazeCellType, cols: number, rows: number): MazeCellType[] {
         let array: MazeCellType[] = [];
-        let upCell: MazeCellType | undefined = cells.find(item => item.grid.x === cell.grid.x && item.grid.y === cell.grid.y - 1);
-        let downCell: MazeCellType | undefined = cells.find(item => item.grid.x === cell.grid.x && item.grid.y === cell.grid.y + 1);
-        let leftCell: MazeCellType | undefined = cells.find(item => item.grid.x === cell.grid.x + 1 && item.grid.y === cell.grid.y);
-        let rightCell: MazeCellType | undefined = cells.find(item => item.grid.x === cell.grid.x - 1 && item.grid.y === cell.grid.y);
+        let up: number = indexOfCell(cell.grid.x, cell.grid.y - 1, cols, rows);
+        let down: number = indexOfCell(cell.grid.x, cell.grid.y + 1, cols, rows);
+        let left: number = indexOfCell(cell.grid.x - 1, cell.grid.y, cols, rows);
+        let right: number = indexOfCell(cell.grid.x + 1, cell.grid.y, cols, rows);
 
-        if (upCell) {
-            array.push(upCell);
+        if (up !== -1) {
+            array.push(cells[up]);
         }
 
-        if (downCell) {
-            array.push(downCell);
+        if (down !== -1) {
+            array.push(cells[down]);
         }
 
-        if (leftCell) {
-            array.push(leftCell);
+        if (left !== -1) {
+            array.push(cells[left]);
         }
 
-        if (rightCell !== undefined) {
-            array.push(rightCell);
+        if (right !== -1) {
+            array.push(cells[right]);
         }
 
         return array;
@@ -1055,11 +1058,14 @@ export class DemoMazeSolveAlgorithmService {
      * @param startY
      * @param finalX
      * @param finalY
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      */
     public async mazeAStar(cells: MazePathType[], startX: number, startY: number, finalX: number, finalY: number,
-                           speed: SpeedType, callback: (_value?: MazePathType) => void): Promise<void> {
+                           cols: number, rows: number, speed: SpeedType,
+                           callback: (_value?: MazePathType) => void): Promise<void> {
         let startCell: MazePathType = cells.filter(cell => cell.grid.x === startX && cell.grid.y === startY)[0];
         let finalCell: MazePathType = cells.filter(cell => cell.grid.x === finalX && cell.grid.y === finalY)[0];
         let queue: MazePathType[] = [], neighbors: MazePathType[], cell: MazePathType | undefined, dist: number;
@@ -1076,7 +1082,8 @@ export class DemoMazeSolveAlgorithmService {
                 cell.visited = true;
                 callback(cell);
 
-                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell).filter(neighbor => !neighbor.visited);
+                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell, cols, rows)
+                    .filter(neighbor => !neighbor.visited);
                 neighbors.forEach(neighbor => {
                     dist = cell?.weight as number + 1 +
                         DemoMazeSolveAlgorithmService.heuristic(neighbor.grid, finalCell.grid);
@@ -1084,7 +1091,6 @@ export class DemoMazeSolveAlgorithmService {
                     if (dist < (neighbor.weight as number)) {
                         neighbor.weight = dist;
                         neighbor.root = cell as MazePathType;
-
                         queue.push(neighbor);
                         queue = queue.sort((a, b) =>
                             (a.weight as number) - (b.weight as number));
@@ -1105,11 +1111,14 @@ export class DemoMazeSolveAlgorithmService {
      * @param startY
      * @param finalX
      * @param finalY
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      */
     public async mazeBackTracker(cells: MazePathType[], startX: number, startY: number, finalX: number, finalY: number,
-                                 speed: SpeedType, callback: (_value?: MazePathType) => void): Promise<void> {
+                                 cols: number, rows: number, speed: SpeedType,
+                                 callback: (_value?: MazePathType) => void): Promise<void> {
         let stack: MazePathType[] = [], neighbors: MazePathType[];
         let currCell: MazePathType | undefined = cells.filter(cell =>
             cell.grid.x === startX && cell.grid.y === startY)[0], nextCell: MazePathType;
@@ -1124,7 +1133,7 @@ export class DemoMazeSolveAlgorithmService {
             if (currCell) {
                 currCell.visited = true;
 
-                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, currCell)
+                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, currCell, cols, rows)
                     .filter(neighbor => !neighbor.visited);
 
                 if (neighbors.length === 0) {
@@ -1152,11 +1161,14 @@ export class DemoMazeSolveAlgorithmService {
      * @param startY
      * @param finalX
      * @param finalY
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      */
     public async mazeBFS(cells: MazePathType[], startX: number, startY: number, finalX: number, finalY: number,
-                         speed: SpeedType, callback: (_value?: MazePathType) => void): Promise<void> {
+                         cols: number, rows: number, speed: SpeedType,
+                         callback: (_value?: MazePathType) => void): Promise<void> {
         let node: MazePathType = cells.filter(cell => cell.grid.x === startX && cell.grid.y === startY)[0];
         let queue: MazePathType[] = [node], neighbors: MazePathType[], cell: MazePathType | undefined;
 
@@ -1167,7 +1179,7 @@ export class DemoMazeSolveAlgorithmService {
                 cell.visited = true;
                 callback(cell);
 
-                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell)
+                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell, cols, rows)
                     .filter(neighbor => !neighbor.visited);
 
                 for (let i = 0; i < neighbors.length; i++) {
@@ -1188,11 +1200,14 @@ export class DemoMazeSolveAlgorithmService {
      * @param startY
      * @param finalX
      * @param finalY
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      */
     public async mazeDFS(cells: MazePathType[], startX: number, startY: number, finalX: number, finalY: number,
-                         speed: SpeedType, callback: (_value?: MazePathType) => void): Promise<void> {
+                         cols: number, rows: number, speed: SpeedType,
+                         callback: (_value?: MazePathType) => void): Promise<void> {
         let node: MazePathType = cells.filter(cell => cell.grid.x === startX && cell.grid.y === startY)[0];
         let stack: MazePathType[] = [node], neighbors: MazePathType[], cell: MazePathType | undefined;
 
@@ -1203,7 +1218,7 @@ export class DemoMazeSolveAlgorithmService {
                 cell.visited = true;
                 callback(cell);
 
-                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell)
+                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell, cols, rows)
                     .filter(neighbor => !neighbor.visited);
 
                 for (let i = 0; i < neighbors.length; i++) {
@@ -1224,11 +1239,14 @@ export class DemoMazeSolveAlgorithmService {
      * @param startY
      * @param finalX
      * @param finalY
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      */
     public async mazeDijkstra(cells: MazePathType[], startX: number, startY: number, finalX: number, finalY: number,
-                              speed: SpeedType, callback: (_value?: MazePathType) => void): Promise<void> {
+                              cols: number, rows: number, speed: SpeedType,
+                              callback: (_value?: MazePathType) => void): Promise<void> {
         let node: MazePathType = cells.filter(cell => cell.grid.x === startX && cell.grid.y === startY)[0];
         let queue: MazePathType[] = [], neighbors: MazePathType[], cell: MazePathType | undefined, dist: number;
 
@@ -1244,7 +1262,8 @@ export class DemoMazeSolveAlgorithmService {
                 cell.visited = true;
                 callback(cell);
 
-                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell).filter(neighbor => !neighbor.visited);
+                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell, cols, rows)
+                    .filter(neighbor => !neighbor.visited);
                 neighbors.forEach(neighbor => {
                     dist = cell?.weight as number + 1;
 
@@ -1272,11 +1291,14 @@ export class DemoMazeSolveAlgorithmService {
      * @param startY
      * @param finalX
      * @param finalY
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      */
     public async mazeFloodFill(cells: MazePathType[], startX: number, startY: number, finalX: number, finalY: number,
-                               speed: SpeedType, callback: (_value?: MazePathType) => void): Promise<void> {
+                               cols: number, rows: number, speed: SpeedType,
+                               callback: (_value?: MazePathType) => void): Promise<void> {
         let startCell: MazePathType = cells.filter(cell => cell.grid.x === startX && cell.grid.y === startY)[0];
         let finalCell: MazePathType = cells.filter(cell => cell.grid.x === finalX && cell.grid.y === finalY)[0];
         let queue: MazePathType[] = [], neighbors: MazePathType[], cell: MazePathType | undefined, weight: number;
@@ -1292,7 +1314,8 @@ export class DemoMazeSolveAlgorithmService {
                 callback(cell);
 
                 weight = cell.weight as number;
-                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell).filter(neighbor => !neighbor.visited);
+                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell, cols, rows)
+                    .filter(neighbor => !neighbor.visited);
                 neighbors.forEach(neighbor => neighbor.weight = weight + 1);
                 queue.push(...neighbors);
             }
@@ -1300,7 +1323,7 @@ export class DemoMazeSolveAlgorithmService {
             await sleep(speed);
         }
 
-        await DemoMazeSolveAlgorithmService.moveBack(cells, startCell, speed, callback);
+        await DemoMazeSolveAlgorithmService.moveBack(cells, startCell, cols, rows, speed, callback);
     }
 
     /**
@@ -1310,11 +1333,14 @@ export class DemoMazeSolveAlgorithmService {
      * @param startY
      * @param finalX
      * @param finalY
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      */
     public async mazeGBFS(cells: MazePathType[], startX: number, startY: number, finalX: number, finalY: number,
-                          speed: SpeedType, callback: (_value?: MazePathType) => void): Promise<void> {
+                          cols: number, rows: number, speed: SpeedType,
+                          callback: (_value?: MazePathType) => void): Promise<void> {
         let startCell: MazePathType = cells.filter(cell => cell.grid.x === startX && cell.grid.y === startY)[0];
         let finalCell: MazePathType = cells.filter(cell => cell.grid.x === finalX && cell.grid.y === finalY)[0];
         let queue: MazePathType[] = [], neighbors: MazePathType[], cell: MazePathType | undefined;
@@ -1330,7 +1356,8 @@ export class DemoMazeSolveAlgorithmService {
                 cell.visited = true;
                 callback(cell);
 
-                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell).filter(neighbor => !neighbor.visited);
+                neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell, cols, rows)
+                    .filter(neighbor => !neighbor.visited);
                 neighbors.forEach(neighbor => {
                     neighbor.weight = DemoMazeSolveAlgorithmService.heuristic(neighbor.grid, finalCell.grid);
                     neighbor.root = cell as MazePathType;
@@ -1387,16 +1414,18 @@ export class DemoMazeSolveAlgorithmService {
      *
      * @param cells
      * @param cell
+     * @param cols
+     * @param rows
      * @param speed
      * @param callback
      * @private
      */
-    private static async moveBack(cells: MazePathType[], cell: MazePathType, speed: SpeedType,
-                                  callback: (_value?: MazePathType) => void): Promise<void> {
+    private static async moveBack(cells: MazePathType[], cell: MazePathType, cols: number, rows: number,
+                                  speed: SpeedType, callback: (_value?: MazePathType) => void): Promise<void> {
         let neighbors: MazePathType[], weight: number = cell.weight as number;
 
         while (weight > 0) {
-            neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell)
+            neighbors = DemoMazeSolveAlgorithmService.neighbors(cells, cell, cols, rows)
                 .filter(neighbor => neighbor.weight === weight - 1);
             cell = neighbors[Math.floor(Math.random() * neighbors.length)];
             cell.marked = true;
@@ -1413,33 +1442,43 @@ export class DemoMazeSolveAlgorithmService {
      *
      * @param cells
      * @param cell
+     * @param cols
+     * @param rows
      * @private
      */
-    private static neighbors(cells: MazePathType[], cell: MazePathType): MazePathType[] {
-        let neighbors: MazePathType[] = [], neighbor: MazePathType;
+    private static neighbors(cells: MazePathType[], cell: MazePathType, cols: number, rows: number): MazePathType[] {
+        let neighbors: MazePathType[] = [], index: number;
 
         if (!cell.grid.bt) {
-            neighbor = cells.filter(item =>
-                item.grid.x === cell.grid.x && item.grid.y === cell.grid.y - 1 && !item.grid.bb)[0];
-            neighbors.push(neighbor);
+            index = indexOfCell(cell.grid.x, cell.grid.y - 1, cols, rows);
+
+            if (index !== -1) {
+                neighbors.push(cells[index]);
+            }
         }
 
         if (!cell.grid.bb) {
-            neighbor = cells.filter(item =>
-                item.grid.x === cell.grid.x && item.grid.y === cell.grid.y + 1 && !item.grid.bt)[0];
-            neighbors.push(neighbor);
+            index = indexOfCell(cell.grid.x, cell.grid.y + 1, cols, rows);
+
+            if (index !== -1) {
+                neighbors.push(cells[index]);
+            }
         }
 
         if (!cell.grid.bl) {
-            neighbor = cells.filter(item =>
-                item.grid.x === cell.grid.x - 1 && item.grid.y === cell.grid.y && !item.grid.br)[0];
-            neighbors.push(neighbor);
+            index = indexOfCell(cell.grid.x - 1, cell.grid.y, cols, rows);
+
+            if (index !== -1) {
+                neighbors.push(cells[index]);
+            }
         }
 
         if (!cell.grid.br) {
-            neighbor = cells.filter(item =>
-                item.grid.x === cell.grid.x + 1 && item.grid.y === cell.grid.y && !item.grid.bl)[0];
-            neighbors.push(neighbor);
+            index = indexOfCell(cell.grid.x + 1, cell.grid.y, cols, rows);
+
+            if (index !== -1) {
+                neighbors.push(cells[index]);
+            }
         }
 
         return neighbors;

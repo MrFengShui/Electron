@@ -66,7 +66,6 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
         {code: 'kruskal', text: 'DEMO.MAZEG.NAME.KRUSKAL'},
         {code: 'prim', text: 'DEMO.MAZEG.NAME.PRIM'},
         {code: 'rbt', text: 'DEMO.MAZEG.NAME.RBT'},
-        {code: 'rdbt', text: 'DEMO.MAZEG.NAME.RDBT'},
         {code: 'rd', text: 'DEMO.MAZEG.NAME.RD'},
         {code: 'sw', text: 'DEMO.MAZEG.NAME.SW'},
         {code: 'walson', text: 'DEMO.MAZEG.NAME.WALSON'}
@@ -103,10 +102,10 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
     ngOnInit() {
         this.group = this._builder.group({
             nameCtrl: new FormControl('none', [Validators.required]),
-            speedCtrl: new FormControl('none', [Validators.required]),
-            colsCtrl: new FormControl(60, [Validators.required, Validators.pattern(/[0-9]+/),
+            speedCtrl: new FormControl(1, [Validators.required]),
+            colsCtrl: new FormControl(100, [Validators.required, Validators.pattern(/[0-9]+/),
                 Validators.min(10), Validators.max(200)]),
-            rowsCtrl: new FormControl(30, [Validators.required, Validators.pattern(/[0-9]+/),
+            rowsCtrl: new FormControl(50, [Validators.required, Validators.pattern(/[0-9]+/),
                 Validators.min(5), Validators.max(100)])
         });
         this.source = new MatTableDataSource<MazeGenerationMeta>([]);
@@ -244,7 +243,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
     private selectTask(name: string, cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
         switch (name) {
             case 'ab':
-                this.execAldousBroder(speed, subscription);
+                this.execAldousBroder(cols, rows, speed, subscription);
                 break;
             case 'btnw':
             case 'btne':
@@ -256,7 +255,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
                 this.execEller(cols, rows, speed, subscription);
                 break;
             case 'grow':
-                this.execGrowTree(speed, subscription);
+                this.execGrowTree(cols, rows, speed, subscription);
                 break;
             case 'hunt':
                 this.execHuntKill(cols, rows, speed, subscription);
@@ -265,13 +264,10 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
                 this.execKruskal(speed, subscription);
                 break;
             case 'prim':
-                this.execPrim(speed, subscription);
+                this.execPrim(cols, rows, speed, subscription);
                 break;
             case 'rbt':
-                this.execBackTracker(speed, subscription);
-                break;
-            case 'rdbt':
-                this.execRandomDoubledBackTracker(cols, rows, speed, subscription);
+                this.execBackTracker(cols, rows, speed, subscription);
                 break;
             case 'rd':
                 this.execRandomDivider(cols, rows, speed, subscription);
@@ -285,22 +281,22 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
         }
     }
 
-    private execAldousBroder(speed: SpeedType, subscription: Subscription): void {
-        this._service.mazeAldousBroder(this.cells, speed, value => {
+    private execAldousBroder(cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
+        this._service.mazeAldousBroder(this.cells, cols, rows, speed, value => {
             this.marker$.next(value.currCell);
 
             if (value.currCell && value.nextCell) {
-                DemoMazeGenerateView.merge(value.currCell, value.nextCell);
+                this._service.mergeCells(value.currCell, value.nextCell);
             }
         }).then(() => this.complete(subscription));
     }
 
-    private execBackTracker(speed: SpeedType, subscription: Subscription): void {
-        this._service.mazeBackTracker(this.cells, speed, value => {
+    private execBackTracker(cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
+        this._service.mazeBackTracker(this.cells, cols, rows, speed, value => {
             this.marker$.next(value.currCell);
 
             if (value.currCell && value.nextCell) {
-                DemoMazeGenerateView.merge(value.currCell, value.nextCell);
+                this._service.mergeCells(value.currCell, value.nextCell);
             }
         }).then(() => this.complete(subscription));
     }
@@ -311,7 +307,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
             this.marker$.next(value.currCell);
 
             if (value.currCell && value.nextCell) {
-                DemoMazeGenerateView.merge(value.currCell, value.nextCell);
+                this._service.mergeCells(value.currCell, value.nextCell);
             }
         }).then(() => this.complete(subscription));
     }
@@ -325,17 +321,17 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
             this.marker$.next(value.currCell);
 
             if (value.currCell && value.nextCell) {
-                DemoMazeGenerateView.merge(value.currCell, value.nextCell);
+                this._service.mergeCells(value.currCell, value.nextCell);
             }
         }).then(() => this.complete(subscription));
     }
 
-    private execGrowTree(speed: SpeedType, subscription: Subscription): void {
-        this._service.mazeGrowTree(this.cells, speed, value => {
+    private execGrowTree(cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
+        this._service.mazeGrowTree(this.cells, cols, rows, speed, value => {
             this.marker$.next(value.currCell);
 
             if (value.currCell && value.nextCell) {
-                DemoMazeGenerateView.merge(value.currCell, value.nextCell);
+                this._service.mergeCells(value.currCell, value.nextCell);
             }
         }).then(() => this.complete(subscription));
     }
@@ -346,51 +342,41 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
             this.scanner$.next(value.scanner);
 
             if (value.currCell && value.nextCell) {
-                DemoMazeGenerateView.merge(value.currCell, value.nextCell);
+                this._service.mergeCells(value.currCell, value.nextCell);
             }
         }).then(() => this.complete(subscription));
     }
 
     private execKruskal(speed: SpeedType, subscription: Subscription): void {
-        this.cells.forEach(cell => cell.weight = 0);
-        this._service.mazeKruskal(this.cells, speed, value => {
+        this.cells.forEach((cell, index) => cell.weight = index + 1);
+        this._service.mazeKruskal(this.cells, this.cols, this.rows, speed, value => {
             this.currMarker$.next(value.currCell);
             this.nextMarker$.next(value.nextCell);
 
             if (value.currCell && value.nextCell) {
-                DemoMazeGenerateView.merge(value.currCell, value.nextCell);
+                this._service.mergeCells(value.currCell, value.nextCell);
             }
         }).then(() => this.complete(subscription));
     }
 
-    private execPrim(speed: SpeedType, subscription: Subscription): void {
+    private execPrim(cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
         this.cells.forEach(cell => cell.weight = 0);
-        this._service.mazePrim(this.cells, speed, value => {
+        this._service.mazePrim(this.cells, cols, rows, speed, value => {
             this.marker$.next(value.currCell);
 
             if (value.currCell && value.nextCell) {
-                DemoMazeGenerateView.merge(value.currCell, value.nextCell);
-            }
-        }).then(() => this.complete(subscription));
-    }
-
-    private execRandomDoubledBackTracker(cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
-        this._service.mazeDoubleBackTracker(this.cells, cols, rows, speed, value => {
-            this.marker$.next(value.currCell);
-
-            if (value.currCell && value.nextCell) {
-                DemoMazeGenerateView.merge(value.currCell, value.nextCell);
+                this._service.mergeCells(value.currCell, value.nextCell);
             }
         }).then(() => this.complete(subscription));
     }
 
     private execRandomDivider(cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
-        this._service.mazeRandomDivider(Array.from(this.cells), 0, cols - 1, 0,
+        this._service.mazeRandomDivider(Array.from(this.cells), cols, rows, 0, cols - 1, 0,
             rows - 1, speed, value => {
                 this.marker$.next(value.currCell);
 
                 if (value.currCell && value.nextCell) {
-                    DemoMazeGenerateView.merge(value.currCell, value.nextCell);
+                    this._service.mergeCells(value.currCell, value.nextCell);
                 }
             }).then(() => this.complete(subscription));
     }
@@ -400,19 +386,19 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
             this.marker$.next(value.currCell);
 
             if (value.currCell && value.nextCell) {
-                DemoMazeGenerateView.merge(value.currCell, value.nextCell);
+                this._service.mergeCells(value.currCell, value.nextCell);
             }
         }).then(() => this.complete(subscription));
     }
 
     private execWalson(speed: SpeedType, subscription: Subscription): void {
-        this._service.mazeWalson(this.cells, speed, value => {
+        this._service.mazeWalson(this.cells, this.cols, this.rows, speed, value => {
             this.marker$.next(value.currCell);
             this.startMarker$.next(value.startCell);
             this.finalMarker$.next(value.finalCell);
 
             if (value.currCell && value.nextCell) {
-                DemoMazeGenerateView.merge(value.currCell, value.nextCell);
+                this._service.mergeCells(value.currCell, value.nextCell);
             }
         }).then(() => this.complete(subscription));
     }
@@ -434,27 +420,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
         this.cells$.next(this.cells);
     }
 
-    private static merge(currCell: MazeCellType, nextCell: MazeCellType): void {
-        if (currCell.grid.y + 1 === nextCell.grid.y) {
-            currCell.grid.bb = false;
-            nextCell.grid.bt = false;
-        }
 
-        if (currCell.grid.y - 1 === nextCell.grid.y) {
-            currCell.grid.bt = false;
-            nextCell.grid.bb = false;
-        }
-
-        if (currCell.grid.x + 1 === nextCell.grid.x) {
-            currCell.grid.br = false;
-            nextCell.grid.bl = false;
-        }
-
-        if (currCell.grid.x - 1 === nextCell.grid.x) {
-            currCell.grid.bl = false;
-            nextCell.grid.br = false;
-        }
-    }
 
     private static match(name: string): string {
         switch (name) {
