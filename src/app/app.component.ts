@@ -35,7 +35,7 @@ import {
     ],
     selector: 'app-root',
     templateUrl: './app.component.html',
-    providers: [{provide: APP_BASE_HREF, useValue: '.'}]
+    providers: [{provide: APP_BASE_HREF, useValue: '/dist/web'}]
 })
 export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
