@@ -24,7 +24,7 @@
                     "builder": "@angular-devkit/build-angular:browser",
                     "options": {
                         "aot": true,
-                        "baseHref": "https://electron.web.github.io/",
+                        "baseHref": "https://mrfengshui.github.io/Electron/",
                         "outputPath": "dist/web",
                         "index": "src/index.html",
                         "main": "src/main.ts",
