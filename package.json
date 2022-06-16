@@ -76,8 +76,6 @@
         }
     },
     "scripts": {
-        "ng": "ng",
-        "serve": "ng serve",
         "start": "npm-run-all -p angular:serve electron:serve",
         "build": "npm run angular:build && npm run electron:build",
         "test": "ng test",
