@@ -4,9 +4,11 @@ import {PreloadAllModules, RouterModule, Routes} from '@angular/router';
 import {DemoErrorView} from "../../web/error/error.component";
 import {DemoTestView} from "../../web/test/test.component";
 import {DemoOutletView} from "../../web/demo/demo.component";
+import {DemoHomeView} from "../../web/home/home.component";
 
 const routes: Routes = [
-    {path: '', redirectTo: 'demo/navigation', pathMatch: 'full'},
+    {path: '', redirectTo: '.', pathMatch: 'full'},
+    {path: '.', component: DemoHomeView},
     {path: 'demo', component: DemoOutletView, loadChildren: () =>
             import('../../web/demo/demo.module').then(module => module.WebDemoModule)},
     {path: 'error/404', component: DemoErrorView},

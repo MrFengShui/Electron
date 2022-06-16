@@ -1,0 +1,12 @@
+<div class="demo-home-view-wrapper bg-base overflow overflow-y overflow-primary h-100 p-100">
+    <mat-grid-list cols="4" gutterSize="1rem" rowHeight="4:3">
+        <mat-grid-tile class="bg-primary" *ngFor="let link of links">
+            <a [routerLink]="link.link"
+               class="d-flex justify-content-center align-items-center txt-base w-100 h-100 mb-300">
+                <mat-icon style="font-size: 8rem;width: auto;height: auto;">{{link.icon}}</mat-icon>
+            </a>
+            <mat-grid-tile-footer style="font-weight: bold">{{link.text | transloco}}</mat-grid-tile-footer>
+        </mat-grid-tile>
+    </mat-grid-list>
+</div>
+

@@ -268,11 +268,23 @@ $text-map: left, right, center, justify;
     }
 }
 
-.demo-navigation-view {
-    .demo-navigation-view-wrapper {
+.demo-home-view {
+    min-height: calc(100% - 4rem);
+
+    .demo-home-view-wrapper {
+        box-sizing: border-box;
+
         a {
             text-decoration: none;
         }
+    }
+}
+
+.demo-outlet-view {
+    height: 100%;
+
+    .demo-outlet-view-wrapper {
+        height: inherit;
     }
 }
 

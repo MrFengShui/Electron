@@ -13,17 +13,35 @@ import {DOCUMENT} from "@angular/common";
 import {MatDialog, MatDialogRef} from "@angular/material/dialog";
 import {TranslocoService} from "@ngneat/transloco";
 import {Store} from "@ngrx/store";
-import {BehaviorSubject, interval, Subject, Subscription} from "rxjs";
+import {BehaviorSubject, filter, interval, map, Observable, of, Subject, Subscription} from "rxjs";
 
-import {LocaleType, register} from "./global/utils/global.utils";
+import {ColorType, LocaleType, register} from "./global/utils/global.utils";
 
-import {StorageSaveLoadState} from "./global/ngrx/storage.reducer";
+import {storage, StorageSaveLoadState} from "./global/ngrx/storage.reducer";
 import {STORAGE_SELECTOR} from "./global/ngrx/storage.selector";
 import {
-    STORAGE_COLOR_LOAD_ACTION,
-    STORAGE_INIT_ACTION, STORAGE_LOCALE_LOAD_ACTION,
-    STORAGE_THEME_LOAD_ACTION
+    STORAGE_COLOR_LOAD_ACTION, STORAGE_COLOR_SAVE_ACTION,
+    STORAGE_INIT_ACTION, STORAGE_LOCALE_LOAD_ACTION, STORAGE_LOCALE_SAVE_ACTION,
+    STORAGE_THEME_LOAD_ACTION, STORAGE_THEME_SAVE_ACTION
 } from "./global/ngrx/storage.action";
+import {MatRadioChange} from "@angular/material/radio";
+import {MatSlideToggleChange} from "@angular/material/slide-toggle";
+import {ActivatedRoute, NavigationEnd, Router} from "@angular/router";
+
+interface PaletteToggleModel {
+
+    color: ColorType;
+    label: string;
+    style: string;
+
+}
+
+interface LocaleToggleModel {
+
+    code: LocaleType;
+    name: string;
+
+}
 
 @Component({
     animations: [
@@ -50,7 +68,24 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
     bright$: Subject<boolean> = new BehaviorSubject<boolean>(false);
     progress$: Subject<number> = new BehaviorSubject<number>(0);
+    path$!: Observable<boolean>;
 
+    locale: LocaleType | null = null;
+    color: ColorType | null = null;
+    theme: boolean | null = null;
+
+    readonly paletteToggles: PaletteToggleModel[] = [
+        {color: 'default', label: 'DEMO.TUNE.THEME.DEFAULT', style: '#9C27B0'},
+        {color: 'spring', label: 'DEMO.TUNE.THEME.SPRING', style: '#4CAF50'},
+        {color: 'summer', label: 'DEMO.TUNE.THEME.SUMMER', style: '#F44336'},
+        {color: 'autumn', label: 'DEMO.TUNE.THEME.AUTUMN', style: '#FF5722'},
+        {color: 'winter', label: 'DEMO.TUNE.THEME.WINTER', style: '#3F51B5'}
+    ];
+    readonly localeToggles: LocaleToggleModel[] = [
+        {code: 'en', name: 'DEMO.TUNE.LOCALE.EN'},
+        {code: 'zhs', name: 'DEMO.TUNE.LOCALE.ZHS'},
+        {code: 'zht', name: 'DEMO.TUNE.LOCALE.ZHT'}
+    ];
     readonly tags: { title: string, subtitle: string } = {
         title: 'DEMO.PUBLIC.DECLAIM',
         subtitle: 'DEMO.PUBLIC.COPYRIGHT'
@@ -62,19 +97,19 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
     constructor(
         private _ref: ApplicationRef,
+        private _route: ActivatedRoute,
         @Inject(DOCUMENT)
         private _document: Document,
         private _cdr: ChangeDetectorRef,
         private _render: Renderer2,
+        private _router: Router,
         private _zone: NgZone,
         private _store: Store<StorageSaveLoadState>,
         private _service: TranslocoService,
         private _dialog: MatDialog
     ) {
-        let subscription = this._zone.runTask(() =>
-            interval(10).subscribe(() =>
-                this._zone.run(() => this._ref.tick())));
-        this.subscriptions.push(subscription);
+        this.autoTopDownRefresh();
+        this.listenRouterChange();
     }
 
     ngOnInit() {
@@ -94,10 +129,37 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         });
     }
 
+    listenLocaleChange(change: MatRadioChange): void {
+        this._store.dispatch(STORAGE_LOCALE_SAVE_ACTION({payload: change.value}));
+    }
+
+    listenColorChange(change: MatRadioChange): void {
+        this._store.dispatch(STORAGE_COLOR_SAVE_ACTION({payload: change.value}));
+    }
+
+    listenThemeChange(change: MatSlideToggleChange): void {
+        this._store.dispatch(STORAGE_THEME_SAVE_ACTION({payload: change.checked}));
+    }
+
+    private autoTopDownRefresh(): void {
+        let subscription = this._zone.runTask(() =>
+            interval(10).subscribe(() =>
+                this._zone.run(() => this._ref.tick())));
+        this.subscriptions.push(subscription);
+    }
+
+    private listenRouterChange(): void {
+        let subscription = this._zone.runTask(() => this._router.events
+            .pipe(
+                filter(value => value instanceof NavigationEnd),
+                map(() => this._route.snapshot.routeConfig?.path)
+            ).subscribe(value => this.path$ = of(value !== 'error')));
+        this.subscriptions.push(subscription);
+    }
+
     private initStorageProperties(): void {
-        this.first = window.sessionStorage.getItem('locale') === null
-            && window.sessionStorage.getItem('color') === null
-            && window.sessionStorage.getItem('theme') === null
+        this.first = storage.getItem('locale') === null && storage.getItem('color') === null
+            && storage.getItem('theme') === null;
 
         if (this.first) {
             this._store.dispatch(STORAGE_INIT_ACTION());
@@ -112,6 +174,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         let subscription = this._zone.runOutsideAngular(() =>
             this._store.select(STORAGE_SELECTOR)
                 .subscribe(value => {
+                    this.locale = value.locale;
+                    this.color = value.color;
+                    this.theme = value.theme;
+
                     if (value.locale !== null) {
                         this._service.setActiveLang(value.locale as LocaleType);
                         register(value.locale as LocaleType);

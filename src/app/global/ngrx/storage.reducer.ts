@@ -10,7 +10,7 @@ import {
 import {ColorType, LocaleType} from "../utils/global.utils";
 import {coerceBooleanProperty} from "@angular/cdk/coercion";
 
-let storage: Storage = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+export const storage: Storage = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? window.sessionStorage : window.localStorage;
 
 export interface StorageSaveLoadState {

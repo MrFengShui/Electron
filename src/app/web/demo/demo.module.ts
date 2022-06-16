@@ -16,13 +16,11 @@ import {DemoOutletView} from "./demo.component";
 import {DemoIconView} from "./icon/icon.component";
 import {DemoMazeGenerateView} from "./maze/generate.component";
 import {DemoMazeSolveView} from "./maze/solve.component";
-import {DemoNavigationView} from "./navigation/navigation.component";
 import {DemoSortView} from "./sort/sort.component";
 import {DemoSnakeView} from "./game/snake.component";
 
 const routes: Routes = [
     {path: '', redirectTo: 'navigation', pathMatch: 'full'},
-    {path: 'navigation', component: DemoNavigationView},
     {path: 'icon', component: DemoIconView},
     {path: 'maze/generate', component: DemoMazeGenerateView},
     {path: 'maze/solve', component: DemoMazeSolveView},
@@ -36,7 +34,6 @@ const routes: Routes = [
         DemoIconView,
         DemoMazeGenerateView,
         DemoMazeSolveView,
-        DemoNavigationView,
         DemoSnakeView,
         DemoSortView,
         DurationPipe,
@@ -60,7 +57,6 @@ const routes: Routes = [
         DemoIconView,
         DemoMazeGenerateView,
         DemoMazeSolveView,
-        DemoNavigationView,
         DemoSnakeView,
         DemoSortView,
         DurationPipe,
