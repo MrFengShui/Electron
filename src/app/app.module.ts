@@ -14,6 +14,7 @@ import {GlobalTranslateModule} from "./global/module/translate.module";
 import {GlobalWebModule} from "./global/module/web.module";
 
 import {AppComponent} from './app.component';
+import {APP_BASE_HREF} from "@angular/common";
 
 @NgModule({
     declarations: [
@@ -36,7 +37,9 @@ import {AppComponent} from './app.component';
         GlobalTranslateModule,
         GlobalWebModule
     ],
-    providers: [],
+    providers: [
+        {provide: APP_BASE_HREF, useValue: '/dist/web'}
+    ],
     exports: [
         AppComponent
     ],

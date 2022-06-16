@@ -1,0 +1,145 @@
+@use "sass:map";
+@use "@angular/material" as mat;
+
+@mixin global-theme-mixin($theme) {
+    $config: mat.get-color-config($theme);
+    $primary: map.get($config, "primary");
+    $accent: map.get($config, "accent");
+    $warn: map.get($config, "warn");
+    $foreground: map.get($config, "foreground");
+    $background: map.get($config, "background");
+
+    $bgcolor: map.get($background, "background");
+    $txtcolor: map.get($foreground, "base");
+
+    .bg-base {
+        background-color: $bgcolor;
+    }
+
+    .bg-none {
+        background-color: transparent !important;
+    }
+
+    .txt-base {
+        color: $txtcolor;
+    }
+
+    .txt-dark {
+        color: #212121;
+    }
+
+    .txt-light {
+        color: #f5f5f5;
+    }
+
+    $list: (
+        "primary": $primary,
+        "accent": $accent,
+        "warn": $warn,
+    );
+    @each $key, $value in $list {
+        .bg-#{$key} {
+            background-color: mat.get-color-from-palette($value) !important;
+        }
+
+        .txt-#{$key} {
+            color: mat.get-color-from-palette($value);
+        }
+
+        .border {
+            @each $key, $value in $list {
+                &.b-#{$key} {
+                    border-color: mat.get-color-from-palette($value);
+                }
+
+                &.bt-#{$key} {
+                    border-top-color: mat.get-color-from-palette($value);
+                }
+
+                &.bb-#{$key} {
+                    border-bottom-color: mat.get-color-from-palette($value);
+                }
+
+                &.bl-#{$key} {
+                    border-left-color: mat.get-color-from-palette($value);
+                }
+
+                &.br-#{$key} {
+                    border-right-color: mat.get-color-from-palette($value);
+                }
+            }
+        }
+
+        @for $i from 1 through 9 {
+            .bg-#{$key}-#{$i * 100} {
+                background-color: mat.get-color-from-palette($value, $i * 100) !important;
+            }
+
+            .txt-#{$key}-#{$i * 100} {
+                color: mat.get-color-from-palette($value, $i * 100) !important;
+            }
+        }
+    }
+
+    .overflow {
+        @each $key, $value in $list {
+            &.overflow-#{$key} {
+                &::-webkit-scrollbar-thumb {
+                    background-color: transparent;
+                }
+
+                &:hover {
+                    &::-webkit-scrollbar-thumb {
+                        background-color: mat.get-color-from-palette($value);
+                    }
+                }
+            }
+        }
+
+        @for $i from 1 through 9 {
+            &.overflow-primary-#{$i * 100} {
+                &::-webkit-scrollbar-thumb {
+                    background-color: transparent;
+                }
+
+                &:hover {
+                    &::-webkit-scrollbar-thumb {
+                        background-color: mat.get-color-from-palette($primary, $i * 100);
+                    }
+                }
+            }
+
+            &.overflow-accent-#{$i * 100} {
+                &::-webkit-scrollbar-thumb {
+                    background-color: transparent;
+                }
+
+                &:hover {
+                    &::-webkit-scrollbar-thumb {
+                        background-color: mat.get-color-from-palette($accent, $i * 100);
+                    }
+                }
+            }
+
+            &.overflow-warn-#{$i * 100} {
+                &::-webkit-scrollbar-thumb {
+                    background-color: transparent;
+                }
+
+                &:hover {
+                    &::-webkit-scrollbar-thumb {
+                        background-color: mat.get-color-from-palette($warn, $i * 100);
+                    }
+                }
+            }
+        }
+    }
+
+    .demo-maze-mark {
+        background-color: mat.get-color-from-palette($warn, 400);
+    }
+
+    .demo-maze-path {
+        background-color: mat.get-color-from-palette($warn, 600);
+    }
+}
