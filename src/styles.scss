@@ -165,6 +165,16 @@ $size-map: (
     .h-#{$key} {
         height: #{$value};
     }
+
+    @if $key != 'auto' and $key != 'fit' {
+        .vw-#{$key} {
+            width: #{$key}vw;
+        }
+
+        .vh-#{$key} {
+            height: #{$key}vh;
+        }
+    }
 }
 
 .flex-fill {

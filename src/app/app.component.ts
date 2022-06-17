@@ -152,8 +152,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         let subscription = this._zone.runTask(() => this._router.events
             .pipe(
                 filter(value => value instanceof NavigationEnd),
-                map(() => this._route.snapshot.routeConfig?.path)
-            ).subscribe(value => this.path$ = of(value !== 'error')));
+                map(() => this._route.snapshot.firstChild?.url)
+            )
+            .subscribe(value =>
+                this.path$ = of(value !== undefined && value[0].path !== 'error')));
         this.subscriptions.push(subscription);
     }
 

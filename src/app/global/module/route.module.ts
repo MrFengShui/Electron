@@ -7,8 +7,8 @@ import {DemoOutletView} from "../../web/demo/demo.component";
 import {DemoHomeView} from "../../web/home/home.component";
 
 const routes: Routes = [
-    {path: '', redirectTo: '.', pathMatch: 'full'},
-    {path: '.', component: DemoHomeView},
+    {path: '', redirectTo: 'home', pathMatch: 'full'},
+    {path: 'home', component: DemoHomeView},
     {path: 'demo', component: DemoOutletView, loadChildren: () =>
             import('../../web/demo/demo.module').then(module => module.WebDemoModule)},
     {path: 'error/404', component: DemoErrorView},
