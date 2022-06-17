@@ -20,7 +20,7 @@ const routes: Routes = [
   imports: [RouterModule.forRoot(routes, {
       preloadingStrategy: PreloadAllModules,
       relativeLinkResolution: 'legacy',
-      useHash: false
+      useHash: true
   })],
   exports: [RouterModule]
 })

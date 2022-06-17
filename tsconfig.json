@@ -2,8 +2,8 @@
 {
     "compileOnSave": false,
     "compilerOptions": {
-        "baseUrl": ".",
-        "outDir": "./dist/web",
+        "baseUrl": "/",
+        "outDir": "docs",
         "forceConsistentCasingInFileNames": true,
         "strict": true,
         "noImplicitOverride": true,

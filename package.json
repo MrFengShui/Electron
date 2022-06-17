@@ -42,8 +42,8 @@
             "!tsconfig.spec.json"
         ],
         "extraFiles": {
-            "from": "./dist",
-            "to": "./resources/app",
+            "from": "./docs",
+            "to": "./resources/app/docs",
             "filter": [
                 "**/*"
             ]

@@ -30,7 +30,7 @@ function createWindow(): BrowserWindow {
         win.loadURL('http://localhost:8080').then();
     } else {
         win.loadURL(url.format({
-            pathname: path.join(__dirname, '../web/index.html'),
+            pathname: path.join(__dirname, '../docs/index.html'),
             protocol: 'file:',
             slashes: true
         })).then();
