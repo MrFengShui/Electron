@@ -155,7 +155,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
                 map(() => this._route.snapshot.firstChild?.url)
             )
             .subscribe(value =>
-                this.path$ = of(value !== undefined && value[0].path !== 'error')));
+                this.path$ = of(value !== undefined && value[0].path !== 'error' && value[0].path !== 'login')));
         this.subscriptions.push(subscription);
     }
 

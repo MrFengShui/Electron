@@ -32,11 +32,11 @@ type MazeStartFinal = 'tlbr' | 'brtl' | 'bltr' | 'trbl' | 'tltr' | 'trtl' | 'blb
 
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
-    selector: 'demo-maze-solve-view',
-    templateUrl: 'solve.component.html',
+    selector: 'demo-maze-pathfind-view',
+    templateUrl: 'pathfind.component.html',
     providers: [DemoMazeSolveAlgorithmService]
 })
-export class DemoMazeSolveView implements OnInit, OnDestroy, AfterViewInit {
+export class DemoMazePathfindView implements OnInit, OnDestroy, AfterViewInit {
 
     @ViewChild('json', {read: TemplateRef})
     private json!: TemplateRef<any>;

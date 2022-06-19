@@ -66,6 +66,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
         {code: 'kruskal', text: 'DEMO.MAZEG.NAME.KRUSKAL'},
         {code: 'prim', text: 'DEMO.MAZEG.NAME.PRIM'},
         {code: 'rbt', text: 'DEMO.MAZEG.NAME.RBT'},
+        {code: 'rdbt', text: 'DEMO.MAZEG.NAME.RDBT'},
         {code: 'rd', text: 'DEMO.MAZEG.NAME.RD'},
         {code: 'sw', text: 'DEMO.MAZEG.NAME.SW'},
         {code: 'walson', text: 'DEMO.MAZEG.NAME.WALSON'}
@@ -269,6 +270,9 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
             case 'rbt':
                 this.execBackTracker(cols, rows, speed, subscription);
                 break;
+            case 'rdbt':
+                this.execDoubleBackTracker(cols, rows, speed, subscription);
+                break;
             case 'rd':
                 this.execRandomDivider(cols, rows, speed, subscription);
                 break;
@@ -305,6 +309,17 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
                            subscription: Subscription): void {
         this._service.mazeBinaryTree(this.cells, cols, rows, direct, speed, value => {
             this.marker$.next(value.currCell);
+
+            if (value.currCell && value.nextCell) {
+                this._service.mergeCells(value.currCell, value.nextCell);
+            }
+        }).then(() => this.complete(subscription));
+    }
+
+    private execDoubleBackTracker(cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
+        this._service.mazeDoubleBackTracker(this.cells, cols, rows, speed, value => {
+            this.currMarker$.next(value.fstCell);
+            this.nextMarker$.next(value.sndCell);
 
             if (value.currCell && value.nextCell) {
                 this._service.mergeCells(value.currCell, value.nextCell);
@@ -381,7 +396,7 @@ export class DemoMazeGenerateView implements OnInit, OnDestroy {
             }).then(() => this.complete(subscription));
     }
 
-    private execSideWinder(cols: number, rows: number, speed: number, subscription: Subscription): void {
+    private execSideWinder(cols: number, rows: number, speed: SpeedType, subscription: Subscription): void {
         this._service.mazeSideWinder(this.cells, cols, rows, speed, value => {
             this.marker$.next(value.currCell);
 

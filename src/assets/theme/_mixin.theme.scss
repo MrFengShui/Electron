@@ -135,6 +135,14 @@
         }
     }
 
+    .widget-overlay {
+        background-color: mat.get-color-from-palette($warn, 900);
+
+        .mat-dialog-container {
+            background-color: transparent !important;
+        }
+    }
+
     .demo-maze-mark {
         background-color: mat.get-color-from-palette($warn, 400);
     }

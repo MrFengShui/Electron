@@ -35,6 +35,8 @@
     "DEMO.PUBLIC.LOAD": "加载",
     "DEMO.PUBLIC.NAME": "算法",
     "DEMO.PUBLIC.RATE": "游戏速度",
+    "DEMO.PUBLIC.RESULT.YES": "是",
+    "DEMO.PUBLIC.RESULT.NO": "否",
     "DEMO.PUBLIC.RESET": "重置",
     "DEMO.PUBLIC.SAVE": "保存",
     "DEMO.PUBLIC.SELECT": "--- 请选择 ---",
@@ -46,6 +48,12 @@
 
     "DEMO.ICON.COPY": "点击复制代码",
     "DEMO.ICON.COPIED": "已复制图标代码",
+
+    "DEMO.LOGIN.LABEL": "登入",
+    "DEMO.LOGIN.USERNAME": "账号",
+    "DEMO.LOGIN.PASSWORD": "密码",
+    "DEMO.LOGIN.ERROR.USERNAME": "错误：账号不正确。",
+    "DEMO.LOGIN.ERROR.PASSWORD": "错误：密码不正确。",
 
     "DEMO.ERROR.LINK": "回到主页",
     "DEMO.ERROR.TITLE": "错误404",
@@ -156,6 +164,7 @@
     "DEMO.MAZE.STATUS.READY": "已就绪",
     "DEMO.MAZE.STATUS.CREATE": "创建中",
     "DEMO.MAZE.STATUS.SOLVE": "寻找中",
+    "DEMO.MAZE.UNSAVE": "你是否放弃保存所有已生成的迷宫跳转到下个页面？",
     "DEMO.MAZEG.NAME.AB": "Aldous Broder算法",
     "DEMO.MAZEG.NAME.BTNW": "二叉树（西北）算法",
     "DEMO.MAZEG.NAME.BTSW": "二叉树（西南）算法",
@@ -167,6 +176,7 @@
     "DEMO.MAZEG.NAME.KRUSKAL": "克鲁斯克尔算法",
     "DEMO.MAZEG.NAME.PRIM": "普里姆算法",
     "DEMO.MAZEG.NAME.RBT": "随机回溯算法",
+    "DEMO.MAZEG.NAME.RDBT": "随机双回溯算法",
     "DEMO.MAZEG.NAME.RD": "随机分割算法",
     "DEMO.MAZEG.NAME.SW": "Side Winder算法",
     "DEMO.MAZEG.NAME.WALSON": "沃森算法",

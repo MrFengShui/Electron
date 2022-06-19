@@ -6,6 +6,7 @@ html, body {
     padding: 0;
     width: 100vw;
     height: 100vh;
+    overflow: hidden;
 }
 
 $align-tag: (
@@ -275,6 +276,28 @@ $text-map: left, right, center, justify;
         flex-direction: column;
         justify-content: center;
         align-items: center;
+    }
+}
+
+.demo-login-view {
+    .demo-login-view-wrapper {
+        background-image: url(assets/image/login-page.jpg);
+        background-origin: border-box;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        position: relative;
+
+        .mat-card {
+            filter: opacity(0.5);
+            position: absolute;
+            top: 5%;
+            left: 5%;
+
+            &:hover {
+                filter: opacity(1.0);
+            }
+        }
     }
 }
 

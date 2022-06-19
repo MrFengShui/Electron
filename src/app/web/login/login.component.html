@@ -1,0 +1,36 @@
+<div class="demo-login-view-wrapper vw-100 vh-100">
+    <mat-card class="mat-elevation-z8" style="width: 30rem">
+        <div class="d-flex align-items-center sx-50">
+            <mat-icon>person</mat-icon>
+            <span class="mat-title my-0">{{'DEMO.LOGIN.LABEL' | transloco}}</span>
+        </div>
+        <mat-divider inset class="my-100" style="margin: auto -1rem;width: calc(100% + 2rem);"></mat-divider>
+        <form [formGroup]="group" class="d-flex flex-col-pos">
+            <mat-form-field appearance="standard">
+                <mat-label>{{'DEMO.LOGIN.USERNAME' | transloco}}</mat-label>
+                <input type="text" matInput formControlName="usrCtrl">
+                <mat-icon matSuffix>account_box</mat-icon>
+                <mat-error *ngIf="group.controls['usrCtrl'].invalid">
+                    {{'DEMO.LOGIN.ERROR.USERNAME' | transloco}}
+                </mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="standard">
+                <mat-label>{{'DEMO.LOGIN.PASSWORD' | transloco}}</mat-label>
+                <input [type]="visible ? 'text' : 'password'" matInput formControlName="pwdCtrl">
+                <mat-icon matSuffix (click)="$event.stopPropagation();visible = !visible;">
+                    {{visible ? 'visibility_off' : 'visibility'}}
+                </mat-icon>
+                <mat-error *ngIf="group.controls['pwdCtrl'].invalid">
+                    {{'DEMO.LOGIN.ERROR.PASSWORD' | transloco}}
+                </mat-error>
+            </mat-form-field>
+        </form>
+        <mat-divider inset class="my-100" style="margin: auto -1rem;width: calc(100% + 2rem);"></mat-divider>
+        <mat-card-actions class="m-0 p-0">
+            <button mat-button class="w-100 py-25" (click)="handleToggleLoginAction()"
+                    (keyup.enter)="handleToggleLoginAction()">
+                {{'DEMO.LOGIN.LABEL' | transloco}}
+            </button>
+        </mat-card-actions>
+    </mat-card>
+</div>

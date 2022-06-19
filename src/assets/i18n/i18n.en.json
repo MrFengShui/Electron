@@ -35,6 +35,8 @@
     "DEMO.PUBLIC.LOAD": "Load",
     "DEMO.PUBLIC.NAME": "Algorithm",
     "DEMO.PUBLIC.RATE": "Game Rate",
+    "DEMO.PUBLIC.RESULT.YES": "Yes",
+    "DEMO.PUBLIC.RESULT.NO": "No",
     "DEMO.PUBLIC.RESET": "Reset",
     "DEMO.PUBLIC.SAVE": "Save",
     "DEMO.PUBLIC.SELECT": "--- Select One ---",
@@ -46,6 +48,12 @@
 
     "DEMO.ICON.COPY": "Click to Copy Code",
     "DEMO.ICON.COPIED": "Icon Code Copied",
+
+    "DEMO.LOGIN.LABEL": "Login",
+    "DEMO.LOGIN.USERNAME": "Username",
+    "DEMO.LOGIN.PASSWORD": "Password",
+    "DEMO.LOGIN.ERROR.USERNAME": "Error: Username is incorrect.",
+    "DEMO.LOGIN.ERROR.PASSWORD": "Error: Password is incorrect.",
 
     "DEMO.ERROR.LINK": "Go Home",
     "DEMO.ERROR.TITLE": "ERROR 404",
@@ -156,6 +164,7 @@
     "DEMO.MAZE.STATUS.READY": "Ready",
     "DEMO.MAZE.STATUS.CREATE": "Generating",
     "DEMO.MAZE.STATUS.SOLVE": "Pathfinding",
+    "DEMO.MAZE.UNSAVE": "Do you want to redirect to next view without saving mazes in list?",
     "DEMO.MAZEG.NAME.AB": "Aldous Broder",
     "DEMO.MAZEG.NAME.BTNW": "Binary Tree (North West)",
     "DEMO.MAZEG.NAME.BTSW": "Binary Tree (South West)",
@@ -167,6 +176,7 @@
     "DEMO.MAZEG.NAME.KRUSKAL": "Random Kruskal",
     "DEMO.MAZEG.NAME.PRIM": "Random Prim",
     "DEMO.MAZEG.NAME.RBT": "Random Back Tracker",
+    "DEMO.MAZEG.NAME.RDBT": "Random Double Back Tracker",
     "DEMO.MAZEG.NAME.RD": "Random Divider",
     "DEMO.MAZEG.NAME.SW": "Side Winder",
     "DEMO.MAZEG.NAME.WALSON": "Walson",

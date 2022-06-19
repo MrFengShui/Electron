@@ -38,7 +38,7 @@ import {APP_BASE_HREF} from "@angular/common";
         GlobalWebModule
     ],
     providers: [
-        // {provide: APP_BASE_HREF, useValue: '/electron'}
+        {provide: APP_BASE_HREF, useValue: '/page'}
     ],
     exports: [
         AppComponent

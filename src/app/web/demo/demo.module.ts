@@ -7,6 +7,8 @@ import {TranslocoModule} from "@ngneat/transloco";
 import {GlobalCDKModule} from "../../global/module/cdk.module";
 import {GlobalMaterialModule} from "../../global/module/material.module";
 
+import {MazeListUnsavedCanDeactivate} from "../../global/auth/deactive.service";
+
 import {DurationPipe} from "../../global/pipe/duration.pipe";
 import {GameStatusPipe} from "./game/game.pipe";
 import {MazeCreateStatusPipe, MazeSolveStatusPipe} from "./maze/maze.pipe";
@@ -15,15 +17,15 @@ import {SortOrderPipe, SortStatusPipe} from "./sort/sort.pipe";
 import {DemoOutletView} from "./demo.component";
 import {DemoIconView} from "./icon/icon.component";
 import {DemoMazeGenerateView} from "./maze/generate.component";
-import {DemoMazeSolveView} from "./maze/solve.component";
+import {DemoMazePathfindView} from "./maze/pathfind.component";
 import {DemoSortView} from "./sort/sort.component";
 import {DemoSnakeView} from "./game/snake.component";
 
 const routes: Routes = [
     {path: '', redirectTo: 'navigation', pathMatch: 'full'},
     {path: 'icon', component: DemoIconView},
-    {path: 'maze/generate', component: DemoMazeGenerateView},
-    {path: 'maze/solve', component: DemoMazeSolveView},
+    {path: 'maze/generate', component: DemoMazeGenerateView, canDeactivate: [MazeListUnsavedCanDeactivate]},
+    {path: 'maze/solve', component: DemoMazePathfindView},
     {path: 'game/snake', component: DemoSnakeView},
     {path: 'sort', component: DemoSortView}
 ];
@@ -33,7 +35,7 @@ const routes: Routes = [
         DemoOutletView,
         DemoIconView,
         DemoMazeGenerateView,
-        DemoMazeSolveView,
+        DemoMazePathfindView,
         DemoSnakeView,
         DemoSortView,
         DurationPipe,
@@ -56,7 +58,7 @@ const routes: Routes = [
         DemoOutletView,
         DemoIconView,
         DemoMazeGenerateView,
-        DemoMazeSolveView,
+        DemoMazePathfindView,
         DemoSnakeView,
         DemoSortView,
         DurationPipe,
@@ -65,6 +67,9 @@ const routes: Routes = [
         MazeSolveStatusPipe,
         SortOrderPipe,
         SortStatusPipe
+    ],
+    providers: [
+        MazeListUnsavedCanDeactivate
     ]
 })
 export class WebDemoModule {}
